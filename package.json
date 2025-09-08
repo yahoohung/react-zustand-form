@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Concurrent-safe, user-first form state for React 18/19 powered by Zustand. Supports uncontrolled or controlled fields, coalesced server updates (dirty-first), async validation, and a tiny vanilla store.",
   "keywords": [
-    "react-zustandt-form",
+    "react-zustand-form",
     "react",
     "typescript"
   ],
