@@ -32,10 +32,9 @@
   "sideEffects": false,
   "scripts": {
     "clean": "rimraf dist",
-    "build2": "tsup src/index.ts src/plugins/backend-sync.ts --dts --format esm,cjs --sourcemap",
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "jest",
+    "test": "jest --colors",
     "test:watch": "vitest --coverage",
     "test:type": "vitest typecheck || echo 'Type check done'",
     "coverage:open": "xdg-open coverage/index.html || open coverage/index.html",
@@ -54,12 +53,6 @@
     "react-dom": "^18 || ^19",
     "zustand": "^5.0.8"
   },
-  "size-limit": [
-    {
-      "path": "dist/bundle.js",
-      "limit": "10 kB"
-    }
-  ],  
   "devDependencies": {
     "@changesets/cli": "^2.27.9",
     "@size-limit/preset-small-lib": "^11.1.4",
