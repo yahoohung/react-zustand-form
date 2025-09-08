@@ -76,7 +76,7 @@ function setAtPath(obj, path, value) {
   const parts = parsePath(path);
   if (parts.length === 0) return value;
   const rootIsArray = Array.isArray(obj);
-  const root = rootIsArray ? obj.slice() : { ...obj ?? {} };
+  const root = rootIsArray ? obj.slice() : { ...obj != null ? obj : {} };
   let cur = root;
   for (let i = 0; i < parts.length; i++) {
     const seg = parts[i];
@@ -87,7 +87,7 @@ function setAtPath(obj, path, value) {
         cur[seg] = value;
       } else {
         const nxtSeg = parts[i + 1];
-        const container = Array.isArray(next) || typeof nxtSeg === "number" ? Array.isArray(next) ? next.slice() : [] : { ...next ?? {} };
+        const container = Array.isArray(next) || typeof nxtSeg === "number" ? Array.isArray(next) ? next.slice() : [] : { ...next != null ? next : {} };
         cur[seg] = container;
         cur = container;
       }
@@ -98,7 +98,7 @@ function setAtPath(obj, path, value) {
         cur[seg] = value;
       } else {
         const nxtSeg = parts[i + 1];
-        const container = Array.isArray(next) || typeof nxtSeg === "number" ? Array.isArray(next) ? next.slice() : [] : { ...next ?? {} };
+        const container = Array.isArray(next) || typeof nxtSeg === "number" ? Array.isArray(next) ? next.slice() : [] : { ...next != null ? next : {} };
         cur[seg] = container;
         cur = container;
       }
@@ -107,7 +107,8 @@ function setAtPath(obj, path, value) {
   return root;
 }
 function createBatcher(cfg = {}) {
-  const max = cfg.max ?? 1e3;
+  var _a;
+  const max = (_a = cfg.max) != null ? _a : 1e3;
   const useTrans = !!cfg.useTransition;
   let q = {};
   let order = [];
@@ -172,16 +173,17 @@ function useForm(opts) {
     return () => unsub();
   }, [store]);
   const runResolverAndApply = React__default.default.useCallback(async (values) => {
+    var _a, _b;
     if (!opts.resolver) return;
     const token = ++store.getState().resolverEpoch;
     try {
       const result = await opts.resolver(values);
       if (token !== store.getState().resolverEpoch) return;
-      const errors = result?.errors ?? {};
+      const errors = (_a = result == null ? void 0 : result.errors) != null ? _a : {};
       store.setState((s) => ({ ...s, formState: { ...s.formState, errors } }), false, { type: `${name} resolver:ok` });
     } catch (err) {
       if (token !== store.getState().resolverEpoch) return;
-      const errors = { _root: String(err?.message ?? err) };
+      const errors = { _root: String((_b = err == null ? void 0 : err.message) != null ? _b : err) };
       store.setState((s) => ({ ...s, formState: { ...s.formState, errors } }), false, { type: `${name} resolver:err` });
     }
   }, [name, opts.resolver, store]);
@@ -193,6 +195,7 @@ function useForm(opts) {
     ] });
   }, [store]);
   function register(path, ropts = {}) {
+    var _a, _b;
     const parts = parsePath(path);
     const def = getAtPath(opts.defaultValues, parts);
     if (ropts.uncontrolled) {
@@ -200,14 +203,15 @@ function useForm(opts) {
         name: path,
         defaultValue: def,
         ref: (el) => {
+          var _a2;
           if (!el) return;
           const st = store.getState();
-          const refs = st.__domRefs ?? (st.__domRefs = {});
+          const refs = (_a2 = st.__domRefs) != null ? _a2 : st.__domRefs = {};
           refs[path] = { current: el };
         },
         onChange: (e) => {
           const now = e.currentTarget.value;
-          const isDirty = String(now) !== String(def ?? "");
+          const isDirty = String(now) !== String(def != null ? def : "");
           store.setState((s) => ({ ...s, formState: { ...s.formState, dirtyFields: { ...s.formState.dirtyFields, [path]: isDirty } } }), false, { type: `${name} field:dirty` });
         },
         onBlur: () => {
@@ -217,17 +221,18 @@ function useForm(opts) {
     }
     return {
       name: path,
-      value: getAtPath(store.getState().value ?? opts.defaultValues, parts) ?? "",
+      value: (_b = getAtPath((_a = store.getState().value) != null ? _a : opts.defaultValues, parts)) != null ? _b : "",
       onChange: (e) => {
         const v = e.currentTarget.value;
         let nextValLocal;
         store.setState((s) => {
-          const prev = s.value ?? opts.defaultValues;
+          var _a2;
+          const prev = (_a2 = s.value) != null ? _a2 : opts.defaultValues;
           const nextVal = setAtPath(prev, parts, v);
           nextValLocal = nextVal;
           const dirty = {
             ...s.formState.dirtyFields,
-            [path]: String(v) !== String(def ?? "")
+            [path]: String(v) !== String(def != null ? def : "")
           };
           return { ...s, value: nextVal, formState: { ...s.formState, dirtyFields: dirty } };
         }, false, { type: `${name} field:set` });
@@ -240,12 +245,14 @@ function useForm(opts) {
     };
   }
   const handleSubmit = (fn) => (e) => {
-    e?.preventDefault?.();
+    var _a, _b;
+    (_a = e == null ? void 0 : e.preventDefault) == null ? void 0 : _a.call(e);
     const st = store.getState();
-    const refs = st.__domRefs ?? {};
+    const refs = (_b = st.__domRefs) != null ? _b : {};
     const fromDom = JSON.parse(JSON.stringify(opts.defaultValues));
     Object.keys(refs).forEach((p) => {
-      const el = refs[p]?.current;
+      var _a2;
+      const el = (_a2 = refs[p]) == null ? void 0 : _a2.current;
       if (!el) return;
       const parts = parsePath(p);
       getAtPath(fromDom, parts);
