@@ -13,7 +13,7 @@ export default defineConfig({
   splitting: false,         // lib: keep single-file outputs per entry
   target: 'es2019',
   treeshake: true,
-  minify: false,
+  minify: true,
   external: ['react', 'react-dom', 'zustand'], // don’t bundle peers
   outDir: 'dist',
   outExtension: ({ format }) => ({

@@ -1,6 +1,6 @@
 {
   "name": "react-zustand-form",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Concurrent-safe, user-first form state for React 18/19 powered by Zustand. Supports uncontrolled or controlled fields, coalesced server updates (dirty-first), async validation, and a tiny vanilla store.",
   "keywords": [
     "react-zustand-form",
@@ -8,12 +8,15 @@
     "typescript"
   ],
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yahoohung/react-zustand-form/issues"
+  },
   "files": [
     "dist",
     "README.md",
     "LICENSE"
   ],
-  "type": "module",
+  "type": "commonjs",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -41,9 +44,10 @@
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write .",
     "release:dry": "npm publish --dry-run",
-    "prepublishOnly": "npm run clean && npm run build && npm test && npm run size",
+    "prepublishOnly": "npm run clean && npm run build && npm test && npm run size && npm run smoke",
     "publish:public": "npm publish --access public --provenance",
-    "size": "size-limit"
+    "size": "size-limit",
+    "smoke": "node scripts/smoke.cjs"
   },
   "engines": {
     "node": ">=18.17"
