@@ -1,0 +1,47 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'          # e.g. v0.1.0
+  workflow_dispatch:   # Allow manual release
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}  # npm publish will automatically read this env variable
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install deps (CI)
+        run: npm ci
+
+      # Before publishing, run the same checks as CI: build + smoke + size-limit
+      - name: Verify (build + smoke + size-limit)
+        run: npm run pack:dry
+
+      # Actual publish (**Note**: package.json never contains dist paths;
+      # the publish process already includes pre/post scripts)
+      - name: Publish to npm
+        run: npm run release
+        env:
+          # If you use an NPM automation token (recommended), no OTP is needed.
+          # If your package requires 2FA for publishing,
+          # either switch to an automation token or publish manually.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

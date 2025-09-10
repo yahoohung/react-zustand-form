@@ -4,7 +4,16 @@
 *.tgz
 
 # dist
-/dist
+dist/
+.publish-tmp/
+index.js
+index.mjs
+index.d.ts
+index.js.map
+index.mjs.map
+esm/
+plugins/
+.smoke-tmp/
 
 # dependencies
 /node_modules

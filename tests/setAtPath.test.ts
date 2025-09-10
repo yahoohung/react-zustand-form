@@ -5,15 +5,15 @@ describe('setAtPath – immutable updates with safe path parsing', () => {
     const base = { a: { b: { c: 1 }, k: 123 }, z: 9 };
     const next = setAtPath(base, 'a.b.c', 42);
 
-    // 值已更新
+    // Value has been updated
     expect(getAtPath(next, 'a.b.c')).toBe(42);
 
-    // 不可變：根與沿途分支引用變化
+    // Immutable: root and path branches are new references
     expect(next).not.toBe(base);
     expect(next.a).not.toBe(base.a);
     expect(next.a.b).not.toBe(base.a.b);
 
-    // 未改分支引用保持
+    // Unchanged branches keep the same reference
     expect(next.a.k).toBe(base.a.k);
     expect(next.z).toBe(base.z);
   });
@@ -22,7 +22,7 @@ describe('setAtPath – immutable updates with safe path parsing', () => {
     const next = setAtPath({}, 'foo[0].bar', 7);
     expect(next).toEqual({ foo: [{ bar: 7 }] });
 
-    // 更深：建立 a.b[2].c，並產生 holes
+    // Deeper: create a.b[2].c, with holes in the array
     const next2 = setAtPath({}, 'a.b[2].c', 1);
     expect(Array.isArray(next2.a.b)).toBe(true);
     expect(next2.a.b.length).toBe(3);
@@ -34,12 +34,12 @@ describe('setAtPath – immutable updates with safe path parsing', () => {
     const base = { list: [{ v: 1 }, { v: 2 }, { v: 3 }] };
     const next = setAtPath(base, 'list[1].v', 9);
 
-    // list 本身為新陣列（slice），但未改元素保持相同引用
+    // list itself is a new array (slice), but unchanged elements keep the same reference
     expect(next.list).not.toBe(base.list);
     expect(next.list[0]).toBe(base.list[0]);
     expect(next.list[2]).toBe(base.list[2]);
 
-    // 被修改的那個元素應該被淺複製過（物件引用已變）
+    // The modified element should be shallow-copied (object reference has changed)
     expect(next.list[1]).not.toBe(base.list[1]);
     expect(next.list[1].v).toBe(9);
   });
@@ -47,7 +47,7 @@ describe('setAtPath – immutable updates with safe path parsing', () => {
   test('dot numeric key is treated as string key (not array index)', () => {
     const next = setAtPath({}, 'map.0', 'zero');
     expect(next).toEqual({ map: { '0': 'zero' } });
-    // 讀回時亦一致
+    // Reading back is consistent
     expect(getAtPath(next, 'map.0')).toBe('zero');
   });
 
@@ -58,7 +58,7 @@ describe('setAtPath – immutable updates with safe path parsing', () => {
     expect(next.a.length).toBe(4);
     expect(next.a[0]).toBeUndefined();
     expect(next.a[3]).toBe('x');
-    // 只改動 a，其他分支不存在亦不新增
+    // Only "a" is changed; no new branches are created
     expect(Object.keys(next)).toEqual(['a']);
   });
 
@@ -66,7 +66,7 @@ describe('setAtPath – immutable updates with safe path parsing', () => {
     const base = { a: 1 };
     const replaced = setAtPath(base, '', { newRoot: true } as any);
     expect(replaced).toEqual({ newRoot: true });
-    // 原物件不應被改
+    // Original object should remain unchanged
     expect(base).toEqual({ a: 1 });
   });
 

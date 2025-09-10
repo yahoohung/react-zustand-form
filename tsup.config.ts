@@ -2,10 +2,12 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: {
-    index: 'src/index.ts',
-    'plugins/backend-sync': 'src/plugins/backend-sync.ts',
-  },
+  entry: [
+    'src/index.ts',
+    'src/index.tsx',
+    'src/plugins/**/*.ts',
+    'src/plugins/**/*.tsx'
+  ],
   format: ['esm', 'cjs'],
   dts: true,
   sourcemap: true,
@@ -17,6 +19,6 @@ export default defineConfig({
   external: ['react', 'react-dom', 'zustand'], // don’t bundle peers
   outDir: 'dist',
   outExtension: ({ format }) => ({
-    js: format === 'esm' ? '.mjs' : '.cjs',
+    js: format === 'esm' ? '.mjs' : '.js',
   }),
 });
