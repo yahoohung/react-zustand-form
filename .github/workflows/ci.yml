@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test-size:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps (CI)
+        run: npm ci
+
+      # This step runs in order: clean → build → prepublish-prepare → smoke → size-limit → npm pack --dry-run → postpublish
+      - name: Pack Dry-Run (build + smoke + size-limit)
+        run: npm run pack:dry
+
+      # Optional: output the dry-run file list for easier debugging (not required)
+      - name: Show package files (dry-run)
+        run: |
+          npm pack --dry-run > dry-run.txt
+          cat dry-run.txt
+
+      # Optional: upload dry-run.txt as an artifact
+      - name: Upload dry-run manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-dry-run
+          path: dry-run.txt

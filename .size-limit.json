@@ -1,7 +1,7 @@
 [
   {
     "name": "core (tree-shaken useForm)",
-    "path": "dist/index.mjs",
+    "path": "index.js",
     "import": "{ useForm }",
     "ignore": ["react", "react-dom", "zustand"],
     "limit": "6 kB",
@@ -9,17 +9,10 @@
   },
   {
     "name": "plugin (createBackendSync)",
-    "path": "dist/plugins/backend-sync.mjs",
+    "path": "plugins/backend-sync.js",
     "import": "{ createBackendSync }",
     "ignore": ["react", "react-dom", "zustand"],
     "limit": "3 kB",
-    "brotli": true
-  },
-  {
-    "name": "full bundle (all exports)",
-    "path": "dist/index.mjs",
-    "ignore": ["react", "react-dom", "zustand"],
-    "limit": "10 kB",
     "brotli": true
   }
 ]

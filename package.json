@@ -1,6 +1,6 @@
 {
   "name": "react-zustand-form",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Concurrent-safe, user-first form state for React 18/19 powered by Zustand. Supports uncontrolled or controlled fields, coalesced server updates (dirty-first), async validation, and a tiny vanilla store.",
   "keywords": [
     "react-zustand-form",
@@ -11,46 +11,56 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yahoohung/react-zustand-formks.git"
-  },  
+  },
   "bugs": {
     "url": "https://github.com/yahoohung/react-zustand-form/issues"
   },
   "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
+    "**"
   ],
   "type": "commonjs",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
+  "main": "./index.js",
+  "types": "./index.d.ts",
   "exports": {
+    "./package.json": "./package.json",
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./esm/index.d.mts",
+        "default": "./esm/index.mjs"
+      },
+      "default": {
+        "types": "./index.d.ts",
+        "default": "./index.js"
+      }
     },
-    "./plugins/backend-sync": {
-      "types": "./dist/plugins/backend-sync.d.ts",
-      "import": "./dist/plugins/backend-sync.mjs",
-      "require": "./dist/plugins/backend-sync.cjs"
+    "./*": {
+      "import": {
+        "types": "./esm/*.d.mts",
+        "default": "./esm/*.mjs"
+      },
+      "default": {
+        "types": "./*.d.ts",
+        "default": "./*.js"
+      }
     }
   },
   "sideEffects": false,
   "scripts": {
-    "clean": "rimraf dist",
+    "clean": "rimraf dist .publish-tmp || true",
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "jest --colors",
     "test:watch": "vitest --coverage",
     "test:type": "vitest typecheck || echo 'Type check done'",
     "coverage:open": "xdg-open coverage/index.html || open coverage/index.html",
+    "pack:dry": "npm run clean && npm run build && npm run prepublishOnly && npm run smoke && npm pack --dry-run && npm run postpublish",
+    "release": "npm run clean && npm run build && npm run prepublishOnly && npm run smoke && npm publish && npm run postpublish",
+    "prepublishOnly": "node scripts/prepublish-prepare.cjs",
+    "postpublish": "node scripts/postpublish-clean.cjs",
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write .",
     "release:dry": "npm publish --dry-run",
-    "prepublishOnly": "npm run clean && npm run build && npm test && npm run size && npm run smoke",
-    "publish:public": "npm publish --access public --provenance",
-    "size": "size-limit",
+    "size": "npm run build && size-limit",
     "smoke": "node scripts/smoke.cjs"
   },
   "engines": {
