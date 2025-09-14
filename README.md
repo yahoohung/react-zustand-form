@@ -1,33 +1,32 @@
 # react-zustand-form
 
-> **Concurrent-safe, user-first form state for React 18/19 — powered by Zustand selectors.**
-> **Uncontrolled *or* controlled. High-frequency server sync. Field-level meta without rerenders.**
+> **Concurrent-safe form state for React 18/19, powered by Zustand selectors.**
+> **Works as uncontrolled or controlled. Handles fast server updates. Field meta without extra renders.**
 
 ---
 
-## Why react-zustand-form?
+## Why use react-zustand-form?
 
-We love the React model and we rate RHF very highly — it solves most day-to-day forms.
-But we also build screens where:
+We like how React works and think react-hook-form (RHF) is great for most forms. But sometimes we need more:
 
-* values are **pushed from the backend every second** (think sockets, live prices, device telemetry);
-* inputs must stay **user-first** (the server must not wrestle focus/value from the user);
-* we keep **long-running `touched`/`dirty` statistics** and run **full-form validation** on each change;
-* we need **field-level subscriptions** without re-rendering unrelated parts of the tree;
-* we want a **vanilla store** that works outside React (DevTools, tests, workers) and is **Concurrent-safe**.
+* Values are **sent from the backend often** (for example, sockets, live prices, device data).
+* Inputs must stay **user-first** (the server should not take over what the user is typing).
+* We need to keep **`touched` and `dirty` status** for a long time and run **full validation** on every change.
+* We want **field-level updates** without re-rendering the whole form.
+* We want a **plain store** that works outside React (for DevTools, tests, workers) and is **safe for concurrent rendering**.
 
-So we built **RZF** with a simple rule: keep React rendering calm; let a store do the heavy lifting.
+So we built **RZF** to keep React rendering simple and let the store do the work.
 
 ---
 
-## Highlights
+## Main features
 
-* **User-first uncontrolled**: register as uncontrolled; we only mirror `dirty/touched` meta and read from the DOM on submit.
-* **Server sync plugin**: coalesces patches and **only overwrites not-dirty fields** (policy-driven).
-* **Concurrent-safe**: built on Zustand v5 (`useSyncExternalStore` under the hood); optional `startTransition` wrapping.
-* **Granular subscriptions**: `subscribeWithSelector` keeps updates scoped to what matters.
-* **Path-safe utils**: robust `parsePath/getAtPath/setAtPath` with prototype-pollution guards.
-* **Typed, tiny, testable**: TypeScript first; purely functional core; no top-level side effects.
+* **User-first uncontrolled**: register fields as uncontrolled; we only track `dirty` and `touched`, and read values from the DOM on submit.
+* **Server sync plugin**: merges updates and **only changes fields that are not dirty** (you can set the policy).
+* **Concurrent-safe**: built on Zustand v5 (`useSyncExternalStore` inside); can use `startTransition` if you want.
+* **Fine subscriptions**: `subscribeWithSelector` only updates what you need.
+* **Safe path tools**: strong `parsePath`, `getAtPath`, `setAtPath` with protection against prototype pollution.
+* **Typed, small, testable**: TypeScript first; functional core; no top-level side effects.
 
 ---
 
@@ -35,7 +34,7 @@ So we built **RZF** with a simple rule: keep React rendering calm; let a store d
 
 ```bash
 npm i react-zustand-form zustand
-# peer deps: react ^18.2 || ^19, zustand ^5
+# peer dependencies: react ^18.2 or ^19, zustand ^5
 ```
 
 ---
@@ -60,7 +59,7 @@ export function Profile() {
     <Provider>
       <form
         onSubmit={handleSubmit((values) => {
-          // values are read from DOM at submit time
+          // Values are read from the DOM when the form is submitted
           console.log(values);
         })}
       >
@@ -89,7 +88,7 @@ const { Provider, register, formState } = useForm<Values>({
 </Provider>;
 ```
 
-### 3) Async resolver (validation)
+### 3) Async validation (resolver)
 
 ```tsx
 const { Provider, register } = useForm<Values>({
@@ -108,13 +107,12 @@ import { createBackendSync } from 'react-zustand-form/plugins/backend-sync';
 
 const { Provider, register, store } = useForm<Values>({ defaultValues: { name: '' } });
 
-// coalesce patches; only overwrite not-dirty fields (policy configurable)
+// Merges updates; only changes fields that are not dirty (configurable)
 const sync = createBackendSync(store, { coalesceMs: 16, policy: 'keepDirtyValues' });
 
-// somewhere in your socket handler:
+// In your socket handler:
 sync.pushServerPatch({ 'name': 'Alice' });
 ```
-
 
 ---
 
@@ -124,7 +122,7 @@ sync.pushServerPatch({ 'name': 'Alice' });
 import * as React from 'react';
 import {
   useForm,
-  getAtPath, // exported path utils
+  getAtPath, // path tools
 } from 'react-zustand-form';
 import { createBackendSync } from 'react-zustand-form/plugins/backend-sync';
 
@@ -139,20 +137,20 @@ export function LiveProfile() {
     name: 'live-profile',
     defaultValues: { name: '', email: '', price: '' },
     devtools: process.env.NODE_ENV !== 'production',
-    // optional: a resolver if you’d like live validation
+    // optional: add a resolver if you want live validation
     // resolver: async (v) => ({ errors: v.name ? {} : { name: 'Required' } }),
   });
 
-  // 1) Attach backend-sync (client-only): coalesce; only overwrite NOT-dirty fields
+  // 1) Attach backend sync (client only): merges; only changes fields that are not dirty
   const sync = React.useMemo(
     () => createBackendSync(store, { coalesceMs: 150, policy: 'keepDirtyValues' }),
     [store]
   );
 
-  // 2) Simulate high-frequency backend patches (e.g., sockets)
+  // 2) Simulate frequent backend updates (e.g. sockets)
   React.useEffect(() => {
     const id = setInterval(() => {
-      // backend pushes new price or name every second
+      // backend sends new price or name every second
       const price = String(Math.floor(Math.random() * 100));
       const nameMaybe = Math.random() < 0.3 ? `User ${Math.floor(Math.random() * 10)}` : undefined;
 
@@ -164,7 +162,7 @@ export function LiveProfile() {
     return () => clearInterval(id);
   }, [sync]);
 
-  // 3) Reset helpers: to 'defaults' OR to 'server' (latest flushed snapshot)
+  // 3) Reset helpers: to 'defaults' OR to 'server' (latest server snapshot)
   const resetTo = React.useCallback((mode: 'defaults' | 'server') => {
     const s = store.getState();
     const refs = s.__domRefs ?? {};
@@ -192,7 +190,7 @@ export function LiveProfile() {
     <Provider>
       <form
         onSubmit={handleSubmit((values) => {
-          // values are read from DOM at submit time (uncontrolled)
+          // Values are read from the DOM when the form is submitted (uncontrolled)
           alert(JSON.stringify(values, null, 2));
         })}
       >
@@ -229,12 +227,11 @@ export function LiveProfile() {
 **What this shows**
 
 * Inputs are **uncontrolled** (`register(path, { uncontrolled: true })`).
-* Backend pushes **frequently**; plugin coalesces and **won’t overwrite dirty fields**.
-* Two reset modes:
-
-  * **defaults** → set each input back to initial defaults.
-  * **server** → set each input to the **latest server snapshot** the plugin flushed.
-* Meta (`dirty/touched/errors`) is cleared on reset.
+* The backend sends updates often; the plugin merges them and **will not overwrite dirty fields**.
+* Two reset options:
+  * **defaults**: set each input back to the original values.
+  * **server**: set each input to the **latest server snapshot**.
+* The meta (`dirty`, `touched`, `errors`) is cleared on reset.
 
 ---
 
@@ -244,32 +241,32 @@ export function LiveProfile() {
 
 **Options**
 
-| key             | type                                                                     | required | notes                                                                         |
-| --------------- | ------------------------------------------------------------------------ | -------: | ----------------------------------------------------------------------------- |
-| `name`          | `string`                                                                 |          | store name for DevTools                                                       |
-| `defaultValues` | `T`                                                                      |        ✅ | initial snapshot; used for uncontrolled defaults and controlled initial value |
-| `devtools`      | `boolean`                                                                |          | attach Zustand devtools in development only                                   |
-| `resolver`      | `(values: T) => Promise<{errors?: FormErrors}> \| {errors?: FormErrors}` |          | async-friendly, epoch-cancelled                                               |
+| key             | type                                                                     | required | notes                                                                          |
+| --------------- | ------------------------------------------------------------------------ | -------: | ------------------------------------------------------------------------------ |
+| `name`          | `string`                                                                 |          | store name for DevTools                                                        |
+| `defaultValues` | `T`                                                                      |        ✅ | initial values; used for uncontrolled and controlled fields                    |
+| `devtools`      | `boolean`                                                                |          | use Zustand DevTools in development                                            |
+| `resolver`      | `(values: T) => Promise<{errors?: FormErrors}> \| {errors?: FormErrors}` |          | async-friendly, cancels old calls                                              |
 
 **Returns**
 
-| key            | type                                                                                                               | notes                                                                                                                |
-| -------------- | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
-| `Provider`     | `React.FC`                                                                                                         | React context provider for the store                                                                                 |
-| `register`     | `(path: string, opts?: {uncontrolled?: boolean}) => inputProps`                                                    | uncontrolled: returns `defaultValue`, `ref`, `onChange`, `onBlur`; controlled: returns `value`, `onChange`, `onBlur` |
-| `handleSubmit` | `(fn: (values: T) => void) => (e?: FormEvent) => void`                                                             | collects uncontrolled values from DOM; controlled from store                                                         |
-| `formState`    | `{ dirtyFields: Record<string, boolean>; touchedFields: Record<string, boolean>; errors: Record<string, string> }` | mirrored meta for UI                                                                                                 |
-| `store`        | **vanilla** `FormStoreApi<T>`                                                                                      | `getState()`, `setState()`, `subscribe()` — useful for advanced patterns                                             |
+| key            | type                                                                                                               | notes                                                                                                               |
+| -------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `Provider`     | `React.FC`                                                                                                         | React context provider for the store                                                                                |
+| `register`     | `(path: string, opts?: {uncontrolled?: boolean}) => inputProps`                                                    | uncontrolled: gives `defaultValue`, `ref`, `onChange`, `onBlur`; controlled: gives `value`, `onChange`, `onBlur`   |
+| `handleSubmit` | `(fn: (values: T) => void) => (e?: FormEvent) => void`                                                             | collects uncontrolled values from DOM; controlled from store                                                        |
+| `formState`    | `{ dirtyFields: Record<string, boolean>; touchedFields: Record<string, boolean>; errors: Record<string, string> }` | meta for UI                                                                                                         |
+| `store`        | **plain** `FormStoreApi<T>`                                                                                       | `getState()`, `setState()`, `subscribe()` — useful for advanced patterns                                            |
 
-> Controlled inputs trigger the resolver in a microtask after each change. Errors go to `formState.errors`; resolver exceptions are caught and placed under `_root`.
+> Controlled fields run the resolver in a microtask after each change. Errors go to `formState.errors`. Resolver exceptions are put under `_root`.
 
 ---
 
-### Path utilities (exported)
+### Path tools (exported)
 
-> **Path syntax (MVP):** dot + **numeric brackets** only.
-> Examples: `a.b[0].c`, `items[2]`, `map.0` (that’s a string key, not an index).
-> **Quoted keys are not supported yet.** We block dangerous segments (`__proto__`, `constructor`, `prototype`) to prevent prototype-pollution.
+> **Path syntax:** dot and number brackets only.
+> Examples: `a.b[0].c`, `items[2]`, `map.0` (string key, not index).
+> **Quoted keys are not supported yet.** We block dangerous keys (`__proto__`, `constructor`, `prototype`) to prevent prototype pollution.
 
 ```ts
 import { parsePath, getAtPath, setAtPath } from 'react-zustand-form';
@@ -295,66 +292,66 @@ sync.pushServerPatch({ 'rows.3.a': 12, 'name': 'Jane' });
 sync.dispose();
 ```
 
-* Coalesces patches; flushes after `coalesceMs`.
-* Writes to store for observability and **conditionally** overwrites `input.value` for uncontrolled fields (policy-driven).
-* Mark inputs dirty by typing: we won’t overwrite those unless `serverWins`.
+* Merges updates and sends them after `coalesceMs` milliseconds.
+* Writes to the store for tracking and **can** change `input.value` for uncontrolled fields (depends on policy).
+* If you type in a field, it is marked dirty and will not be overwritten unless you use `serverWins`.
 
 ---
 
 ### Advanced: `createFormStore(name, defaults, devtools)`
 
-We export the vanilla store creator for power users (custom hooks, testing, workers).
-Most apps won’t need this — `useForm` wraps it for you.
+We export the plain store creator for advanced users (custom hooks, tests, workers).
+Most apps do not need this. `useForm` wraps it for you.
 
 ---
 
 ## Why not React Context?
 
-Context is brilliant for config and low-frequency signals, but **every Provider value change can force consumers to re-render**. For high-frequency form updates and server patches, that’s wasteful. Zustand gives us:
+React Context is great for settings and low-frequency updates, but **every change in Provider value can cause re-renders**. For fast form updates and server patches, this is not efficient. Zustand gives:
 
-* **Vanilla store** usable outside React;
-* **Selector-based subscriptions** with equality checks;
-* A `useSyncExternalStore`-compatible model for **Concurrent rendering**;
-* **DevTools** and test-friendly ergonomics.
+* **Plain store** you can use outside React
+* **Selector-based subscriptions** with equality checks
+* A `useSyncExternalStore`-compatible model for **concurrent rendering**
+* **DevTools** and good testing experience
 
-We still use a tiny Context internally — only to pass the store reference once.
+We still use a small Context inside — only to pass the store once.
 
 ---
 
 ## Why not react-hook-form?
 
-RHF is an excellent library — use it when it fits. We reached for a different tool because our workloads required:
+RHF is a great library — use it if it fits your needs. We needed something different because:
 
-* **Live server-pushed values** coalesced into inputs **without stealing user input**;
-* **Long-lived, field-level meta** (dirty/touched/errors) updated independently with minimal React work;
-* A **vanilla store** that other systems can manipulate (without a React boundary);
-* **Fine-grained subscriptions** and predictable equality rules;
-* **Full-form validation** policies triggered on change/blur/submit with cancellation (epoch).
+* We have **live values from the server** merged into inputs **without taking over user input**
+* We want **field-level meta** (`dirty`, `touched`, `errors`) updated separately, with little React work
+* We need a **plain store** other systems can use (even without React)
+* We want **fine-grained subscriptions** and clear equality rules
+* We want **full-form validation** on change/blur/submit, with cancellation
 
-If your forms don’t have high-frequency external updates, **RHF is likely simpler**. If you do have them, RZF’s architecture keeps React calm while the store does the heavy lift.
+If your forms do not have fast external updates, **RHF is probably simpler**. If you do, RZF keeps React calm and lets the store do the work.
 
 ---
 
-## Security & stability
+## Security and stability
 
-* **Prototype-pollution guards** on every path segment (`__proto__`, `constructor`, `prototype`).
-* **No `dangerouslySetInnerHTML`**; plugin writes to `input.value` only.
-* **Async safety**: resolver uses **epoch cancellation** + `try/catch`.
-* **Batching**: merge-by-key with microtask flush; capped queue drops the oldest key.
+* **Guards against prototype pollution** on every path segment (`__proto__`, `constructor`, `prototype`)
+* **No `dangerouslySetInnerHTML`**; plugin only writes to `input.value`
+* **Async safety**: resolver uses **cancellation** and `try/catch`
+* **Batching**: merges by key with microtask flush; queue drops the oldest key if full
 
 ---
 
 ## Testing
 
-We ship with lightweight Jest tests and encourage additions.
+We include lightweight Jest tests and welcome more.
 
 ### Local commands
 
 ```bash
-# dev deps you’ll want:
+# Development dependencies you will want:
 npm i -D jest ts-jest @types/jest jest-environment-jsdom @testing-library/react @testing-library/jest-dom
 
-# run tests
+# Run tests
 npm test
 ```
 
@@ -365,7 +362,7 @@ npm test
   ```ts
   /** @jest-environment jsdom */
   ```
-* Prefer `@testing-library/react`’s `act` / `waitFor` (avoid deprecated `react-dom/test-utils`).
+* Prefer `@testing-library/react`’s `act` / `waitFor` (do not use deprecated `react-dom/test-utils`)
 * For fake timers, wrap `advanceTimersByTime` in `act`:
 
   ```ts
@@ -378,54 +375,52 @@ npm test
 
 ### What we test
 
-* **Path utils**: parsing, safety, immutability.
-* **Store**: core API, batcher semantics, devtools gating.
-* **Hooks**: uncontrolled & controlled basics, resolver async behaviour.
-* **Plugins**: not-dirty overwrite vs dirty preserve; policy override.
+* **Path tools**: parsing, safety, immutability
+* **Store**: core API, batching, devtools
+* **Hooks**: uncontrolled & controlled basics, async resolver
+* **Plugins**: overwriting not-dirty vs keeping dirty fields; policy override
 
-PRs with more tests are very welcome (see Contributing).
+Pull requests with more tests are very welcome (see Contributing).
 
 ---
 
 ## Contributing
 
-We welcome pull requests — small and focused is perfect.
+Pull requests are welcome — small and focused is best.
 
 * **Before you open a PR**:
+  * Add or adjust tests; make sure `npm test` passes
+  * Check the size if you add new dependencies
+  * Keep the core free of side effects; put browser-only features in plugins
 
-  * Add/adjust tests; ensure `npm test` passes.
-  * Run a quick size check if you add new deps.
-  * Keep the core side-effect free; put browser-only features behind plugins.
-
-* **Code style**: TypeScript, functional, no top-level effects. Prefer small modules.
-
-* **Commit messages**: any sensible style is fine; we’ll squash on merge.
+* **Code style**: TypeScript, functional, no top-level side effects. Prefer small modules.
+* **Commit messages**: any clear style is fine; we squash on merge.
 
 ---
 
 ## FAQ
 
-**Is this SSR/RSC-safe?**
+**Is this SSR/RSC-safe?**  
 The **core** is — no timers, no DOM at import. The **backend-sync plugin** is **client-only**.
 
-**How big is it?**
-Tiny core; no schema libs bundled. Tree-shakeable (no side effects).
+**How big is it?**  
+The core is tiny; no schema libraries bundled. Tree-shakeable (no side effects).
 
-**Can I use it with Zod/Yup?**
-Yes — wire it in via `resolver`.
+**Can I use it with Zod/Yup?**  
+Yes — connect them using `resolver`.
 
 ---
 
 ## Licence
 
-MIT 
+MIT
 
 ---
 
 ### At a glance
 
-* 🚦 Uncontrolled (user-first) or controlled — you choose per field.
-* ⚡ Coalesced server updates; DOM overwrite only when safe.
-* 🧩 Zuständ-powered store with granular selectors.
-* 🛡️ Safe path utils and async-robust resolver.
-* 🧪 Friendly to tests; PRs welcome.
+* 🚦 Uncontrolled (user-first) or controlled — you choose for each field
+* ⚡ Merges server updates; only changes the DOM when safe
+* 🧩 Zustand-powered store with fine selectors
+* 🛡️ Safe path tools and async-safe resolver
+* 🧪 Easy to test; PRs welcome
