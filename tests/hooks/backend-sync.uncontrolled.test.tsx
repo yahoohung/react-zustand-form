@@ -1,7 +1,7 @@
 /** @jest-environment jsdom */
 import React, { act } from 'react';
 import { render, fireEvent, screen } from '@testing-library/react';
-import { useForm } from '../../src/core/hooks';
+import { useForm } from '../../src/hooks/useForm';
 import { createBackendSync, type ResetPolicy } from '../../src/plugins/backend-sync';
 
 // helper to advance coalesce timers deterministically

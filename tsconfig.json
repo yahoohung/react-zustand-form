@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "ESNext",
+    "target": "es2022",
+    "module": "es2022",
     "jsx": "react-jsx",
     "moduleResolution": "Bundler",
     "skipLibCheck": true,

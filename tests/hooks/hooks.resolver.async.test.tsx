@@ -1,7 +1,7 @@
 /** @jest-environment jsdom */
 import React, { act } from 'react';
 import { render, fireEvent, screen } from '@testing-library/react';
-import { useForm } from '../../src/core/hooks';
+import { useForm } from '../../src/hooks/useForm';
 import type { FormErrors } from '../../src/core/types';
 
 function Demo() {

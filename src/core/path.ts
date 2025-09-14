@@ -10,39 +10,55 @@ function assertSafeKey(k: string) {
 }
 
 export function parsePath(input: PathLike): PathSeg[] {
-    if (Array.isArray(input)) return Array.from(input as ReadonlyArray<PathSeg>);
+    // Fast path: if input is already array-like, return a shallow copy to avoid aliasing.
+    if (Array.isArray(input)) return (input as unknown as PathSeg[]).slice();
+
     const s = String(input);
-    if (!s) return [];
+    const N = s.length;
+    if (N === 0) return [];
+
     const out: PathSeg[] = [];
     let i = 0;
-    const N = s.length;
+
     while (i < N) {
-        // read identifier
-        let id = '';
+        // read identifier (up to '.' or '[')
+        let start = i;
         while (i < N) {
-            const ch = s[i];
-            if (ch === '.' || ch === '[') break;
-            id += ch; i++;
+            const ch = s.charCodeAt(i);
+            // '.'(46) '['(91)
+            if (ch === 46 || ch === 91) break;
+            i++;
         }
-        if (id) {
+        if (i > start) {
+            const id = s.slice(start, i);
             assertSafeKey(id);
             out.push(id);
         }
         if (i >= N) break;
-        const ch = s[i];
-        if (ch === '.') { i++; continue; }
-        if (ch === '[') {
-            // only numeric indices supported in MVP
-            i++; // skip [
-            let num = '';
-            while (i < N && s[i] !== ']') { num += s[i++]; }
-            if (i >= N) throw new Error('Unclosed bracket');
-            i++; // skip ]
-            if (!/^\d+$/.test(num)) throw new Error(`Invalid index: ${num}`);
-            const idx = Number(num);
-            if (idx < 0 || !Number.isInteger(idx)) throw new Error(`Invalid index: ${num}`);
-            out.push(idx);
-            if (i < N && s[i] === '.') i++;
+
+        const ch = s.charCodeAt(i);
+        if (ch === 46 /* '.' */) { i++; continue; }
+
+        if (ch === 91 /* '[' */) {
+            i++; // skip '['
+            // manual integer parse: only digits allowed
+            let hasDigit = false;
+            let val = 0;
+            while (i < N) {
+                const c = s.charCodeAt(i);
+                if (c === 93 /* ']' */) break;
+                // '0'(48) .. '9'(57)
+                if (c < 48 || c > 57) throw new Error(`Invalid index: ${s[i]}`);
+                hasDigit = true;
+                val = val * 10 + (c - 48);
+                i++;
+            }
+            if (i >= N || s.charCodeAt(i) !== 93 /* ']' */) throw new Error('Unclosed bracket');
+            i++; // skip ']'
+            if (!hasDigit) throw new Error('Invalid index: ');
+            out.push(val);
+            // optional '.' after bracket
+            if (i < N && s.charCodeAt(i) === 46 /* '.' */) i++;
         }
     }
     return out;
@@ -51,45 +67,66 @@ export function parsePath(input: PathLike): PathSeg[] {
 export function getAtPath<T = any>(obj: any, path: PathLike): T | undefined {
     const parts = parsePath(path);
     let cur = obj;
-    for (const p of parts) {
+    for (let i = 0; i < parts.length; i++) {
         if (cur == null) return undefined;
-        cur = cur[p as any];
+        // Using bracket access to support both string and numeric segments.
+        cur = cur[parts[i] as any];
     }
     return cur as T;
 }
 
 export function setAtPath<T extends object = any>(obj: any, path: PathLike, value: any): T {
     const parts = parsePath(path);
-    if (parts.length === 0) return value as T;
-    const rootIsArray = Array.isArray(obj);
-    const root: any = rootIsArray ? obj.slice() : { ...(obj ?? {}) };
-    let cur: any = root;
-    for (let i = 0; i < parts.length; i++) {
-        const seg = parts[i];
-        const isLast = i === parts.length - 1;
-        if (typeof seg === 'number') {
-            const next = cur[seg];
-            if (isLast) {
-                cur[seg] = value;
-            } else {
-                const nxtSeg = parts[i + 1];
-                const container = Array.isArray(next) || typeof nxtSeg === 'number' ? (Array.isArray(next) ? next.slice() : []) : ({ ...(next ?? {}) });
-                cur[seg] = container;
-                cur = container;
-            }
-        } else {
-            assertSafeKey(seg);
-            const next = cur[seg];
-            if (isLast) {
-                cur[seg] = value;
-            } else {
-                const nxtSeg = parts[i + 1];
-                const container = Array.isArray(next) || typeof nxtSeg === 'number' ? (Array.isArray(next) ? next.slice() : []) : ({ ...(next ?? {}) });
-                cur[seg] = container;
-                cur = container;
-            }
-        }
+    const L = parts.length;
+    if (L === 0) return value as T;
+
+    // --- Fast no-op: read current leaf value first without cloning ---
+    let curRead: any = obj;
+    for (let i = 0; i < L - 1; i++) {
+        if (curRead == null) break;
+        curRead = curRead[parts[i] as any];
     }
+    const leafKey = parts[L - 1] as any;
+    const oldLeaf = curRead != null ? curRead[leafKey] : undefined;
+    if (oldLeaf === value) return obj as T;
+
+    // --- Write path with shallow copies only along the path ---
+    const rootIsArray = Array.isArray(obj);
+    const root: any = rootIsArray ? (obj ? obj.slice() : []) : (obj ? { ...obj } : {});
+    let cur: any = root;
+
+    for (let i = 0; i < L; i++) {
+        const seg = parts[i] as any;
+        const isLast = i === L - 1;
+
+        // Defensive key check for string segments only
+        if (typeof seg === 'string') assertSafeKey(seg);
+
+        if (isLast) {
+            cur[seg] = value;
+            break;
+        }
+
+        const next = cur[seg];
+        const nxtSeg = parts[i + 1];
+
+        // Materialize the next container with minimal branching and shallow copy when needed
+        let container: any;
+        const needArray = typeof nxtSeg === 'number';
+        if (Array.isArray(next)) {
+            // Preserve array identity semantics with a shallow copy
+            container = next.slice();
+        } else if (needArray) {
+            container = [];
+        } else {
+            // object branch
+            container = next ? { ...next } : {};
+        }
+
+        cur[seg] = container;
+        cur = container;
+    }
+
     return root;
 }
 
