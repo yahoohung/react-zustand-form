@@ -8,14 +8,6 @@
     "brotli": true
   },
   {
-    "name": "plugin (createBackendSync)",
-    "path": "plugins/backend-sync/index.js",
-    "import": "{ createBackendSync }",
-    "ignore": ["react", "react-dom", "zustand"],
-    "limit": "3 kB",
-    "brotli": true
-  },
-  {
     "name": "hooks (tree-shaken useForm + useIndexSnapshot)",
     "path": "hooks/index.js",
     "import": "{ useForm, useIndexSnapshot }",
