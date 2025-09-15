@@ -6,7 +6,9 @@ export default defineConfig({
     'src/index.ts',
     'src/index.tsx',
     'src/plugins/**/*.ts',
-    'src/plugins/**/*.tsx'
+    'src/plugins/**/*.tsx',
+    'src/hooks/**/*.ts',
+    'src/hooks/**/*.tsx'    
   ],
   format: ['esm', 'cjs'],
   dts: true,
@@ -15,7 +17,7 @@ export default defineConfig({
   splitting: false,         // lib: keep single-file outputs per entry
   target: 'es2019',
   treeshake: true,
-  minify: true,
+  minify: false,
   external: ['react', 'react-dom', 'zustand'], // don’t bundle peers
   outDir: 'dist',
   outExtension: ({ format }) => ({

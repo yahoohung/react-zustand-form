@@ -31,6 +31,15 @@ function listFilesRec(dir, filter) {
   return out;
 }
 
+function firstSubpathNoExt(rootSubdir) {
+  const js = listFilesRec(path.join(ROOT, rootSubdir), (p) => p.endsWith('.js'));
+  const mjs = listFilesRec(path.join(ROOT, rootSubdir), (p) => p.endsWith('.mjs'));
+  const any = js[0] || mjs[0];
+  if (!any) return null;
+  const relFromRoot = any.replace(ROOT + path.sep, '').replace(/\\/g, '/');
+  return relFromRoot.replace(/\.m?js$/, '');
+}
+
 /** Create node_modules/<name> link to ROOT (junction on Windows), fallback to copy */
 function linkSelfIntoNodeModules(pkgName) {
   fs.mkdirSync(NM_DIR, { recursive: true });
@@ -57,7 +66,7 @@ function linkSelfIntoNodeModules(pkgName) {
 }
 
 (async function main() {
-  console.log('--- Smoke Test: CJS / ESM / TS types / subpath exports ---');
+  console.log('--- Smoke Test: CJS / ESM / TS types / subpath exports (plugins/*, hooks/*, index/*) ---');
 
   assert(exists(PKG_JSON), 'package.json exists');
   const pkg = JSON.parse(fs.readFileSync(PKG_JSON, 'utf8'));
@@ -74,16 +83,10 @@ function linkSelfIntoNodeModules(pkgName) {
     assert(exists(f), `Exists: ${rel(f)}`);
   }
 
-  // If plugins exist, prepare for subpath tests
-  const pluginsJs = listFilesRec(path.join(ROOT, 'plugins'), (p) => p.endsWith('.js'));
-  const pluginsMjs = listFilesRec(path.join(ROOT, 'plugins'), (p) => p.endsWith('.mjs'));
-  const anyPlugin = pluginsJs[0] || pluginsMjs[0];
-  let subpathNoExt = null;
-  if (anyPlugin) {
-    // Turn into "<pkgName>/<relative path without .js/.mjs>"
-    const relFromRoot = anyPlugin.replace(ROOT + path.sep, '').replace(/\\/g, '/');
-    subpathNoExt = relFromRoot.replace(/\.m?js$/, ''); // remove extension
-  }
+  // If subpaths exist, prepare for subpath tests (plugins/*, hooks/* and index/*)
+  const pluginSub = firstSubpathNoExt('plugins');
+  const indexSub = firstSubpathNoExt('index');
+  const hooksSub = firstSubpathNoExt('hooks');
 
   // B) Create a temporary link to this project inside node_modules
   const { linkPath, mode } = linkSelfIntoNodeModules(pkg.name);
@@ -97,16 +100,38 @@ function linkSelfIntoNodeModules(pkgName) {
     console.error(e);
     assert(false, 'CJS require(pkg-name) failed');
   }
-  if (subpathNoExt) {
+  if (pluginSub) {
     try {
-      const sub = require(`${pkg.name}/${subpathNoExt}`);
-      assert(sub != null, `CJS require(${pkg.name}/${subpathNoExt}) OK (resolves ./*.js)`);
+      const sub = require(`${pkg.name}/${pluginSub}`);
+      assert(sub != null, `CJS require(${pkg.name}/${pluginSub}) OK (plugins/*)`);
     } catch (e) {
       console.error(e);
-      assert(false, `CJS require(${pkg.name}/${subpathNoExt}) failed`);
+      assert(false, `CJS require(${pkg.name}/${pluginSub}) failed`);
     }
   } else {
-    console.log('(Note) No plugin file found, skip CJS subpath test');
+    console.log('(Note) No plugins/* file found, skip CJS plugins subpath test');
+  }
+  if (indexSub) {
+    try {
+      const sub = require(`${pkg.name}/${indexSub}`);
+      assert(sub != null, `CJS require(${pkg.name}/${indexSub}) OK (index/*)`);
+    } catch (e) {
+      console.error(e);
+      assert(false, `CJS require(${pkg.name}/${indexSub}) failed`);
+    }
+  } else {
+    console.log('(Note) No index/* file found, skip CJS index subpath test');
+  }
+  if (hooksSub) {
+    try {
+      const sub = require(`${pkg.name}/${hooksSub}`);
+      assert(sub != null, `CJS require(${pkg.name}/${hooksSub}) OK (hooks/*)`);
+    } catch (e) {
+      console.error(e);
+      assert(false, `CJS require(${pkg.name}/${hooksSub}) failed`);
+    }
+  } else {
+    console.log('(Note) No hooks/* file found, skip CJS hooks subpath test');
   }
 
   // D) ESM test (import by package name → uses exports.import)
@@ -117,16 +142,38 @@ function linkSelfIntoNodeModules(pkgName) {
     console.error(e);
     assert(false, 'ESM import(pkg-name) failed');
   }
-  if (subpathNoExt) {
+  if (pluginSub) {
     try {
-      const esmSub = await import(`${pkg.name}/${subpathNoExt}`);
-      assert(esmSub != null, `ESM import(${pkg.name}/${subpathNoExt}) OK (resolves ./esm/*.mjs)`);
+      const esmSub = await import(`${pkg.name}/${pluginSub}`);
+      assert(esmSub != null, `ESM import(${pkg.name}/${pluginSub}) OK (plugins/*)`);
     } catch (e) {
       console.error(e);
-      assert(false, `ESM import(${pkg.name}/${subpathNoExt}) failed`);
+      assert(false, `ESM import(${pkg.name}/${pluginSub}) failed`);
     }
   } else {
-    console.log('(Note) No plugin file found, skip ESM subpath test');
+    console.log('(Note) No plugins/* file found, skip ESM plugins subpath test');
+  }
+  if (indexSub) {
+    try {
+      const esmSub = await import(`${pkg.name}/${indexSub}`);
+      assert(esmSub != null, `ESM import(${pkg.name}/${indexSub}) OK (index/*)`);
+    } catch (e) {
+      console.error(e);
+      assert(false, `ESM import(${pkg.name}/${indexSub}) failed`);
+    }
+  } else {
+    console.log('(Note) No index/* file found, skip ESM index subpath test');
+  }
+  if (hooksSub) {
+    try {
+      const esmSub = await import(`${pkg.name}/${hooksSub}`);
+      assert(esmSub != null, `ESM import(${pkg.name}/${hooksSub}) OK (hooks/*)`);
+    } catch (e) {
+      console.error(e);
+      assert(false, `ESM import(${pkg.name}/${hooksSub}) failed`);
+    }
+  } else {
+    console.log('(Note) No hooks/* file found, skip ESM hooks subpath test');
   }
 
   // E) TS type check (NodeNext resolves exports.types)
@@ -154,8 +201,14 @@ function linkSelfIntoNodeModules(pkgName) {
     import RootDefault, * as RootNS from '${pkg.name}';
     void RootDefault; void RootNS;
   `;
-  if (subpathNoExt) {
-    tsCode += `\nimport * as PluginNS from '${pkg.name}/${subpathNoExt}'; void PluginNS;`;
+  if (pluginSub) {
+    tsCode += `\nimport * as PluginNS from '${pkg.name}/${pluginSub}'; void PluginNS;`;
+  }
+  if (indexSub) {
+    tsCode += `\nimport * as IndexNS from '${pkg.name}/${indexSub}'; void IndexNS;`;
+  }
+  if (hooksSub) {
+    tsCode += `\nimport * as HooksNS from '${pkg.name}/${hooksSub}'; void HooksNS;`;
   }
   fs.writeFileSync(path.join(SRC_DIR, 'index.ts'), tsCode);
 

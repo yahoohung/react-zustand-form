@@ -1,8 +1,8 @@
 /** @jest-environment jsdom */
 import React, { act } from 'react';
 import { render, fireEvent, screen } from '@testing-library/react';
-import { useForm } from '../../src/core/hooks';
-import { createBackendSync, type ResetPolicy } from '../../src/plugins/backend-sync';
+import { useForm } from '../../src/hooks/useForm';
+import { createDomResetSync, type ResetPolicy } from '../../src/plugins/dom-reset-sync';
 
 // helper to advance coalesce timers deterministically
 const flushTimers = async (ms = 20) => {
@@ -30,7 +30,7 @@ function Demo(props: { policy?: ResetPolicy }) {
 
     // attach plugin
     const sync = React.useMemo(
-        () => createBackendSync(store, { coalesceMs: 10, policy }),
+        () => createDomResetSync(store, { coalesceMs: 10, policy }),
         [store, policy]
     );
 

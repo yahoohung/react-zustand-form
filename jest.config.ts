@@ -1,25 +1,33 @@
-/** @type {import('jest').Config} */
-import type { JestConfigWithTsJest } from 'ts-jest';
+import type { Config } from 'jest';
 
-export default {
-  // 用 ts-jest 的 ESM preset
+const config: Config = {
+  // Use ts-jest's ESM preset
   preset: 'ts-jest/presets/default-esm',
-  testEnvironment: 'node',
-  testMatch: [
-    '**/tests/**/*.test.ts',
-    '**/?(*.)+(spec|test).[tj]s?(x)',
-  ],
-  // 令 ts-jest 產生 ESM
-  transform: { '^.+\\.(t|j)sx?$': ['ts-jest', { tsconfig: { module: 'commonjs', jsx: 'react-jsx' } }] },
-  // 讓 Jest 當 .ts 係 ESM
-  extensionsToTreatAsEsm: ['.ts'],
+  testEnvironment: 'jsdom',
 
-  // 修正 ESM 匯入時自動加 .js 副檔名的 mapping（避免 TS import 路徑尾隨 .js 出錯）
-  moduleNameMapper: {
-    '^(\\.{1,2}/.*)\\.js$': '$1',
+  collectCoverageFrom: ['src/**/*.{ts,tsx}'],
+
+  // Tell Jest to treat .ts/.tsx files as ESM
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
+
+  // Configure ts-jest to use ESM with our dedicated test tsconfig
+  transform: {
+    '^.+\\.(t|j)sx?$': [
+      'ts-jest',
+      {
+        tsconfig: 'tsconfig.tests.json',
+        useESM: true
+      }
+    ]
   },
 
-                  // default: node for fast store tests
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+
+  // If your tests mock Worker, include the setup file
   setupFilesAfterEnv: ['<rootDir>/tests/setup-jest.ts'],
 
-} satisfies JestConfigWithTsJest;
+  // If you have ESM dependencies in node_modules that need to be transformed, configure them here if needed
+  // Example: transformIgnorePatterns: ['/node_modules/(?!<esm-package-name>)']
+};
+
+export default config;

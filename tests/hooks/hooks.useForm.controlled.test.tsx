@@ -1,7 +1,7 @@
 /** @jest-environment jsdom */
 import React from 'react';
 import { render, fireEvent, screen } from '@testing-library/react';
-import { useForm } from '../../src/core/hooks';
+import { useForm } from '../../src/hooks/useForm';
 
 function Demo() {
     const { Provider, register, store } = useForm<{ name: string }>({
