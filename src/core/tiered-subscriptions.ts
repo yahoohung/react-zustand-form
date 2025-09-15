@@ -1,20 +1,41 @@
+/**
+ * Tiered subscription helpers for the diff/selector system.
+ *
+ * Compute tier: listen to raw diffs before any coalescing.
+ * UI tier: listen to column version changes for efficient re-render.
+ */
 import type { DiffBus, FieldDiff } from './diff-bus';
 import type { VersionMap } from './version-map';
-import type { IndexStore } from '../index/index-store';
+import type { IndexStore } from '../index/column-index-store';
 
-/** Compute-tier: subscribe raw diffs (pre-coalesce semantics). */
+/**
+ * Subscribe to raw diff batches directly from the diff bus.
+ * Emits every batch before any filtering or coalescing.
+ *
+ * @param bus      DiffBus instance to listen on.
+ * @param listener Callback that receives each batch of diffs.
+ * @returns        Unsubscribe function.
+ */
 export function subscribeCompute(bus: DiffBus, listener: (batch: FieldDiff[]) => void) {
   return bus.subscribe(listener);
 }
 
-// Shared empty record to avoid reallocations when a column is missing.
+/** Shared frozen empty record to avoid new allocations when a column is missing. */
 const EMPTY_NUM_RECORD: Record<string, number> = Object.freeze({});
 
 /**
- * UI-tier: subscribe by column version; call .check() inside store subscription callback.
+ * Subscribe to version changes for a single column.
+ * Call the returned `check()` inside a store subscription to emit when the version changes.
+ *
  * Performance notes:
- * - No cloning of versionByRow (pass by reference). DO NOT mutate the object you receive.
- * - Minimal allocations; only emit when version actually changes.
+ * - Uses 0 as a missing version for cheap comparison.
+ * - No deep cloning; the returned `versionByRow` is a live reference. Do not mutate.
+ *
+ * @param versionMap VersionMap providing version counters.
+ * @param column     Column key to watch.
+ * @param onTick     Called when the version changes.
+ * @param opts       Optional flags. `reuseEnvelope` keeps a single object to reduce allocations.
+ * @returns          An object with a `check()` method to call on each store tick.
  */
 export function subscribeUiByColumn(
   versionMap: VersionMap,
@@ -58,7 +79,14 @@ export function subscribeUiByColumn(
   };
 }
 
-/** Helper: pull latest column map when UI tick comes. */
+/**
+ * Fetch the latest row map for a given column.
+ * Fast path: returns a live reference from the index store. Do not mutate.
+ *
+ * @param indexStore IndexStore to read from.
+ * @param column     Column key to pull.
+ * @returns          Map of rowKey to cell value for the column.
+ */
 export function pullColumn(indexStore: IndexStore, column: string) {
   // Fast path: return reference without cloning.
   return indexStore.getColumn(column).byRow;

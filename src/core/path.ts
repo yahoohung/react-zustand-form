@@ -1,14 +1,42 @@
+/**
+ * Path utilities: parse, get and set by dot/bracket paths.
+ *
+ * Examples of accepted paths:
+ *  - "user.email"
+ *  - "rows.abc[0].score"
+ *  - ["rows", "abc", 0, "score"]
+ */
 // ------------------------------------------------------------
 // src/core/path.ts
 // ------------------------------------------------------------
 import type { PathLike, PathSeg } from './types';
 
+/**
+ * Guard list to prevent prototype-pollution via unsafe keys.
+ * Any path segment equal to one of these will throw.
+ */
 const DANGEROUS_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
 
-function assertSafeKey(k: string) {
-    if (DANGEROUS_KEYS.has(k)) throw new Error(`Unsafe key: ${k}`);
+/**
+ * Throws if a key is unsafe. Used for string segments only.
+ * @param key Key to check.
+ * @throws Error when an unsafe key is found.
+ */
+function assertSafeKey(key: string) {
+    if (DANGEROUS_KEYS.has(key)) throw new Error(`Unsafe key: ${key}`);
 }
 
+/**
+ * Parses a dot/bracket path into an array of segments.
+ *
+ * Fast path: returns a shallow copy if the input is already an array.
+ * Identifiers are split by dots. Numeric indices are read from bracket pairs: `[123]`.
+ * Only digits are allowed inside brackets.
+ *
+ * @param input Path as a dot/bracket string or an array of segments.
+ * @returns Array of segments (`string` and `number`).
+ * @throws Error for invalid indices, unclosed brackets, or unsafe keys.
+ */
 export function parsePath(input: PathLike): PathSeg[] {
     // Fast path: if input is already array-like, return a shallow copy to avoid aliasing.
     if (Array.isArray(input)) return (input as unknown as PathSeg[]).slice();
@@ -64,6 +92,16 @@ export function parsePath(input: PathLike): PathSeg[] {
     return out;
 }
 
+/**
+ * Reads a value from an object by path.
+ *
+ * Walks the object using the parsed segments. Returns `undefined` if any parent is `null`/`undefined`.
+ *
+ * @template T Expected value type.
+ * @param obj   Root object to read.
+ * @param path  Path in string or array form.
+ * @returns     The value at the leaf, or `undefined` if missing.
+ */
 export function getAtPath<T = any>(obj: any, path: PathLike): T | undefined {
     const parts = parsePath(path);
     let cur = obj;
@@ -75,6 +113,18 @@ export function getAtPath<T = any>(obj: any, path: PathLike): T | undefined {
     return cur as T;
 }
 
+/**
+ * Writes a value to an object by path, returning a new root.
+ *
+ * Creates shallow copies along the path only. Other branches are kept by reference.
+ * If the existing leaf is strictly equal to the new value, returns the original root (no-op).
+ *
+ * @template T   Expected root type after the write.
+ * @param obj    Root object or array. May be `undefined`/`null`.
+ * @param path   Path in string or array form.
+ * @param value  New leaf value.
+ * @returns      New root with the path updated.
+ */
 export function setAtPath<T extends object = any>(obj: any, path: PathLike, value: any): T {
     const parts = parsePath(path);
     const L = parts.length;
@@ -129,4 +179,3 @@ export function setAtPath<T extends object = any>(obj: any, path: PathLike, valu
 
     return root;
 }
-

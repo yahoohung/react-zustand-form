@@ -5,6 +5,8 @@ const config: Config = {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'jsdom',
 
+  collectCoverageFrom: ['src/**/*.{ts,tsx}'],
+
   // Tell Jest to treat .ts/.tsx files as ESM
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
 

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { createDiffBus } from '../core/diff-bus';
 import { createVersionMap } from '../core/version-map';
-import { createIndexStore, type IndexStoreOptions } from '../index/index-store';
+import { createIndexStore, type IndexStoreOptions } from '../index/column-index-store';
 import { createIndexStoreWorker } from '../index/index-store.worker';
 import { createActionGate } from '../core/action-gate';
 import { withIndexGuard } from '../core/with-index-guard';

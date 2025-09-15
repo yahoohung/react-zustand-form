@@ -10,7 +10,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yahoohung/react-zustand-formks.git"
+    "url": "git+https://github.com/yahoohung/react-zustand-form.git"
   },
   "bugs": {
     "url": "https://github.com/yahoohung/react-zustand-form/issues"
@@ -57,7 +57,7 @@
     "test": "jest --colors",
     "test:watch": "vitest --coverage",
     "test:type": "vitest typecheck || echo 'Type check done'",
-    "coverage:open": "xdg-open coverage/index.html || open coverage/index.html",
+    "coverage": "npm run test -- --coverage",
     "packlist:assert": "node scripts/assert-packlist.cjs",
     "pack:dry": "npm run clean && npm run build && npm run prepublishOnly && npm run smoke && npm run size && npm run packlist:assert && npm pack --dry-run && npm run postpublish",
     "release": "npm run clean && npm run build && npm run prepublishOnly && npm run smoke && npm run size && npm run packlist:assert && npm publish && npm run postpublish",

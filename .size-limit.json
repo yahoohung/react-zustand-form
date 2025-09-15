@@ -9,7 +9,7 @@
   },
   {
     "name": "plugin (createBackendSync)",
-    "path": "plugins/backend-sync.js",
+    "path": "plugins/backend-sync/index.js",
     "import": "{ createBackendSync }",
     "ignore": ["react", "react-dom", "zustand"],
     "limit": "3 kB",

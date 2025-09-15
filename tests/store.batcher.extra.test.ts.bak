@@ -1,0 +1,14 @@
+// tests/store.batcher.extra.test.ts
+import { createBatcher } from '../src/core/store';
+
+test('batcher with max<=0 keeps only most recent entry', () => {
+  const seen: Array<[string, number]> = [];
+  const b = createBatcher<{ max?: number }>({ max: 0 } as any);
+  b.push('a', 1 as any, (k,p) => seen.push([k, p as any]));
+  b.push('b', 2 as any, (k,p) => seen.push([k, p as any]));
+  queueMicrotask(() => {}); // allow flush
+  return Promise.resolve().then(() => {
+    // only the last one
+    expect(seen).toEqual([['b', 2]]);
+  });
+});

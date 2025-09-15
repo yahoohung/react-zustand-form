@@ -1,7 +1,7 @@
 // Main-thread proxy for IndexStore via Web Worker.
 // Falls back to in-thread store if Worker is unavailable.
 
-import { createIndexStore, type IndexStore, type IndexStoreOptions } from './index-store';
+import { createIndexStore, type IndexStore, type IndexStoreOptions } from './column-index-store';
 import { resolveModuleUrl } from '../utils/resolveModuleUrl';
 
 type Snapshot = Record<string, { byRow: Record<string, unknown> }>;
