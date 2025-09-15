@@ -13,5 +13,3 @@ export * from './core/version-map';
 export * from './core/types';
 export * from './core/path';
 export * from './core/store';
-export * from './hooks/useForm';
-export * from './hooks/useIndexSnapshot';

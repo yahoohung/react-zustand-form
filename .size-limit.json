@@ -14,5 +14,13 @@
     "ignore": ["react", "react-dom", "zustand"],
     "limit": "3 kB",
     "brotli": true
+  },
+  {
+    "name": "hooks (tree-shaken useForm + useIndexSnapshot)",
+    "path": "hooks/index.js",
+    "import": "{ useForm, useIndexSnapshot }",
+    "ignore": ["react", "react-dom", "zustand"],
+    "limit": "4 kB",
+    "brotli": true
   }
 ]

@@ -4,7 +4,7 @@
 import React from 'react';
 import type { DirtyMap, FormErrors, FormState, FormStoreApi, UseFormOptions, RegisterOptions } from '../core/types';
 import { getAtPath, setAtPath, parsePath } from '../core/path';
-import { createFormStore, createBatcher } from '../core/store';
+import { createFormStore } from '../core/store';
 
 const Ctx = React.createContext<FormStoreApi<any> | null>(null);
 
