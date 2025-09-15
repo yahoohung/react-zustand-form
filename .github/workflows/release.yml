@@ -36,12 +36,36 @@ jobs:
       - name: Verify (build + smoke + size-limit)
         run: npm run pack:dry
 
-      # Actual publish (**Note**: package.json never contains dist paths;
-      # the publish process already includes pre/post scripts)
+      # Determine dist-tag from tag name
+      - name: Resolve dist-tag (beta vs latest)
+        id: dist
+        shell: bash
+        run: |
+          REF="${GITHUB_REF_NAME#v}"
+          if [[ "$REF" == *"-"* ]]; then
+            # pre-release tag like 1.2.3-beta.0 or 1.2.3-rc.1
+            if [[ "$REF" == *"-rc."* ]]; then
+              echo "tag=rc" >> "$GITHUB_OUTPUT"
+            else
+              echo "tag=beta" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Resolved dist-tag: $(cat $GITHUB_OUTPUT || true)"
+
+      - name: Ensure package.json version matches tag
+        shell: bash
+        run: |
+          REF="${GITHUB_REF_NAME#v}"
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if [[ "$PKG_VERSION" != "$REF" ]]; then
+            echo "::error ::package.json version ($PKG_VERSION) does not match git tag ($REF)."
+            exit 1
+          fi
+          echo "Version OK: $PKG_VERSION"
+
       - name: Publish to npm
-        run: npm run release
+        run: npm publish --tag ${{ steps.dist.outputs.tag }}
         env:
-          # If you use an NPM automation token (recommended), no OTP is needed.
-          # If your package requires 2FA for publishing,
-          # either switch to an automation token or publish manually.
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

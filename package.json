@@ -1,6 +1,6 @@
 {
   "name": "react-zustand-form",
-  "version": "1.0.6",
+  "version": "1.1.0-beta.0",
   "description": "Concurrent-safe, user-first form state for React 18/19 powered by Zustand. Supports uncontrolled or controlled fields, coalesced server updates (dirty-first), async validation, and a tiny vanilla store.",
   "keywords": [
     "react-zustand-form",
@@ -19,6 +19,7 @@
     "index.*",
     "esm/**",
     "plugins/**",
+    "hooks/**",
     "README.md",
     "LICENSE",
     "package.json"

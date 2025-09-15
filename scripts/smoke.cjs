@@ -66,7 +66,7 @@ function linkSelfIntoNodeModules(pkgName) {
 }
 
 (async function main() {
-  console.log('--- Smoke Test: CJS / ESM / TS types / subpath exports (plugins/*, index/*) ---');
+  console.log('--- Smoke Test: CJS / ESM / TS types / subpath exports (plugins/*, hooks/*, index/*) ---');
 
   assert(exists(PKG_JSON), 'package.json exists');
   const pkg = JSON.parse(fs.readFileSync(PKG_JSON, 'utf8'));
@@ -83,9 +83,10 @@ function linkSelfIntoNodeModules(pkgName) {
     assert(exists(f), `Exists: ${rel(f)}`);
   }
 
-  // If subpaths exist, prepare for subpath tests (plugins/* and index/*)
+  // If subpaths exist, prepare for subpath tests (plugins/*, hooks/* and index/*)
   const pluginSub = firstSubpathNoExt('plugins');
   const indexSub = firstSubpathNoExt('index');
+  const hooksSub = firstSubpathNoExt('hooks');
 
   // B) Create a temporary link to this project inside node_modules
   const { linkPath, mode } = linkSelfIntoNodeModules(pkg.name);
@@ -121,6 +122,17 @@ function linkSelfIntoNodeModules(pkgName) {
   } else {
     console.log('(Note) No index/* file found, skip CJS index subpath test');
   }
+  if (hooksSub) {
+    try {
+      const sub = require(`${pkg.name}/${hooksSub}`);
+      assert(sub != null, `CJS require(${pkg.name}/${hooksSub}) OK (hooks/*)`);
+    } catch (e) {
+      console.error(e);
+      assert(false, `CJS require(${pkg.name}/${hooksSub}) failed`);
+    }
+  } else {
+    console.log('(Note) No hooks/* file found, skip CJS hooks subpath test');
+  }
 
   // D) ESM test (import by package name → uses exports.import)
   try {
@@ -151,6 +163,17 @@ function linkSelfIntoNodeModules(pkgName) {
     }
   } else {
     console.log('(Note) No index/* file found, skip ESM index subpath test');
+  }
+  if (hooksSub) {
+    try {
+      const esmSub = await import(`${pkg.name}/${hooksSub}`);
+      assert(esmSub != null, `ESM import(${pkg.name}/${hooksSub}) OK (hooks/*)`);
+    } catch (e) {
+      console.error(e);
+      assert(false, `ESM import(${pkg.name}/${hooksSub}) failed`);
+    }
+  } else {
+    console.log('(Note) No hooks/* file found, skip ESM hooks subpath test');
   }
 
   // E) TS type check (NodeNext resolves exports.types)
@@ -183,6 +206,9 @@ function linkSelfIntoNodeModules(pkgName) {
   }
   if (indexSub) {
     tsCode += `\nimport * as IndexNS from '${pkg.name}/${indexSub}'; void IndexNS;`;
+  }
+  if (hooksSub) {
+    tsCode += `\nimport * as HooksNS from '${pkg.name}/${hooksSub}'; void HooksNS;`;
   }
   fs.writeFileSync(path.join(SRC_DIR, 'index.ts'), tsCode);
 

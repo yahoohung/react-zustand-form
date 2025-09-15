@@ -13,7 +13,7 @@ try {
       const p = path.join(ROOT, f);
       if (fs.existsSync(p)) fs.rmSync(p, { force: true });
     }
-    for (const d of ['esm', 'plugins', ...dirs.filter(x => !['esm','plugins'].includes(x))]) {
+    for (const d of ['esm', 'plugins', 'hooks', ...dirs.filter(x => !['esm','plugins', 'hooks'].includes(x))]) {
       const p = path.join(ROOT, d);
       if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: true });
     }
@@ -22,7 +22,7 @@ try {
   if (fs.existsSync(DIST)) fs.rmSync(DIST, { recursive: true, force: true });
   if (fs.existsSync(TMP))  fs.rmSync(TMP,  { recursive: true, force: true });
 
-  console.log('[postpublish-clean] cleaned root/esm/plugins and removed dist');
+  console.log('[postpublish-clean] cleaned root/esm/plugins/hooks and removed dist');
 } catch (e) {
   console.error('[postpublish-clean] Error:', e);
   process.exitCode = 1;

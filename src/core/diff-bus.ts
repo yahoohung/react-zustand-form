@@ -11,7 +11,7 @@
 export type DispatchStrategy = 'microtask' | 'animationFrame' | 'idle';
 
 /** String form of a field path. Example: "rows.user123.email". */
-export type FieldPath = string;
+export type FieldName = string;
 
 /**
  * A change to a single field. Emitted in batches.
@@ -23,10 +23,10 @@ export type FieldPath = string;
  * - `rename` carries the old key in `prev` and the new key in `next`.
  */
 export type FieldDiff =
-  | { kind: 'update'; path: FieldPath; prev: unknown; next: unknown; rowKey?: string; column?: string; source?: 'local' | 'server' }
-  | { kind: 'insert'; path: FieldPath; next: unknown; rowKey?: string; column?: string; source?: 'local' | 'server' }
-  | { kind: 'remove'; path: FieldPath; prev: unknown; rowKey?: string; column?: string; source?: 'local' | 'server' }
-  | { kind: 'rename'; path: FieldPath; prev: string; next: string; rowKey?: string; column?: string; source?: 'local' | 'server' };
+  | { kind: 'update'; path: FieldName; prev: unknown; next: unknown; rowKey?: string; column?: string; source?: 'local' | 'server' }
+  | { kind: 'insert'; path: FieldName; next: unknown; rowKey?: string; column?: string; source?: 'local' | 'server' }
+  | { kind: 'remove'; path: FieldName; prev: unknown; rowKey?: string; column?: string; source?: 'local' | 'server' }
+  | { kind: 'rename'; path: FieldName; prev: string; next: string; rowKey?: string; column?: string; source?: 'local' | 'server' };
 
 /** Receives one batch of diffs. */
 type Listener = (batch: FieldDiff[]) => void;

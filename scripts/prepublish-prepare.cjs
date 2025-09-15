@@ -45,6 +45,13 @@ if (fs.existsSync(DIST_PLUGINS)) {
   createdDirs.push('plugins');
 }
 
+const DIST_HOOKS = path.join(DIST, 'hooks');
+const ROOT_HOOKS = path.join(ROOT, 'hooks');
+if (fs.existsSync(DIST_HOOKS)) {
+  copyDirFilter(DIST_HOOKS, ROOT_HOOKS);
+  createdDirs.push('hooks');
+}
+
 // 4) index/** (copy entire dist/index — needed for worker & internal subpath imports)
 const DIST_INDEX = path.join(DIST, 'index');
 const ROOT_INDEX = path.join(ROOT, 'index');
@@ -59,4 +66,4 @@ fs.writeFileSync(
   JSON.stringify({ files: createdFiles, dirs: createdDirs }, null, 2)
 );
 
-console.log('[prepublish-prepare] staged root files, esm/, plugins/, and index/ for publish (package.json untouched)');
+console.log('[prepublish-prepare] staged root files, esm/, plugins/, hooks/, and index/ for publish (package.json untouched)');

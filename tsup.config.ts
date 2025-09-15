@@ -6,7 +6,9 @@ export default defineConfig({
     'src/index.ts',
     'src/index.tsx',
     'src/plugins/**/*.ts',
-    'src/plugins/**/*.tsx'
+    'src/plugins/**/*.tsx',
+    'src/hooks/**/*.ts',
+    'src/hooks/**/*.tsx'    
   ],
   format: ['esm', 'cjs'],
   dts: true,
