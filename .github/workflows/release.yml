@@ -65,7 +65,8 @@ jobs:
           fi
           echo "Version OK: $PKG_VERSION"
 
-      - name: Publish to npm
-        run: npm publish --tag ${{ steps.dist.outputs.tag }}
+      - name: Publish to npm (via npm run release)
+        run: npm run release
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_DIST_TAG: ${{ steps.dist.outputs.tag }}
