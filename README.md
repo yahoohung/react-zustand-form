@@ -39,6 +39,21 @@ npm i react-zustand-form zustand
 
 ---
 
+## Examples (runnable)
+
+- From the repo root:
+  - Install: `npm run examples:install`
+  - Dev server: `npm run examples:dev`
+- In the browser, switch demos with the hash:
+  - `/#uncontrolled`, `/#controlled`
+  - `/#kernel` (ActionGate + column index)
+  - `/#kernel-worker` (index offloaded to Web Worker)
+  - `/#backend-sync` (debounce/coalesce/retry + keep-dirty server patches)
+
+Example sources live under `examples/`.
+
+---
+
 ## Quick start
 
 ### 1) Uncontrolled (user-first)

@@ -68,8 +68,15 @@
     "format": "prettier --write .",
     "release:dry": "npm publish --dry-run",
     "size": "npm run build && size-limit",
-    "smoke": "node scripts/smoke.cjs"
+    "smoke": "node scripts/smoke.cjs",
+    "examples:install": "npm --prefix examples install",
+    "examples:dev": "npm --prefix examples run dev",
+    "examples:build": "npm --prefix examples run build",
+    "examples:preview": "npm --prefix examples run preview"
   },
+  "workspaces": [
+    "examples"
+  ],
   "engines": {
     "node": ">=18.17"
   },
