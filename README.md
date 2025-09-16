@@ -49,8 +49,20 @@ npm i react-zustand-form zustand
   - `/#kernel` (ActionGate + column index)
   - `/#kernel-worker` (index offloaded to Web Worker)
   - `/#backend-sync` (debounce/coalesce/retry + keep-dirty server patches)
+  - `/#validation` (resolver with Zod or AJV)
+  - `/#perf` (large grid, e.g. 5k fields, FPS meter)
 
 Example sources live under `examples/`.
+
+What each demo shows
+
+- `uncontrolled`: DOM-first inputs; library tracks `dirty`/`touched`; values read on submit.
+- `controlled`: store-backed inputs; async `resolver` sets `formState.errors`.
+- `kernel`: rows×columns data; fine-grained field selectors; column sum; highlight on updates; auto server feed; keep-dirty (server won't overwrite focused/edited cells) with a reset button.
+- `kernel-worker`: same as kernel but column indexing offloaded to a Web Worker; reads indexes via `snapshot()`.
+- `backend-sync`: batching/coalescing/retry of diffs; apply server patches with a keep-dirty policy.
+- `validation`: shows `resolver` wired to Zod or AJV.
+- `perf`: big grid (e.g. 100×50 = 5k fields) where only edited cells re-render; includes a simple FPS meter.
 
 ---
 
@@ -128,6 +140,133 @@ const sync = createBackendSync(store, { coalesceMs: 16, policy: 'keepDirtyValues
 // In your socket handler:
 sync.pushServerPatch({ 'name': 'Alice' });
 ```
+
+---
+
+## API Overview
+
+This package exposes two layers:
+
+- App‑level hooks: `useForm` (un/controlled inputs, meta, async validation)
+- Data‑layer kernel: `createFormKernel` (rows×columns state with action gate, diff bus, version map, and column index)
+
+Below is the high‑level API surface with brief examples. Refer to source files for full typings.
+
+### Kernel — `createFormKernel(initialRows, options)`
+
+Creates the “killer feature” data kernel for large forms and table‑like data. It returns a small, consistent surface so field/row/column updates stay atomic and fast.
+
+- Returns: `{ useStore, gate, diffBus, versionMap, indexStore }`
+- `useStore`: Zustand store with `{ rows }`
+- `gate`: ActionGate with atomic operations below
+- `diffBus`: batched diff events for subscribers
+- `versionMap`: per‑column version counters for tiered subscriptions
+- `indexStore`: column index for fast lookups (can run in a Web Worker)
+
+Options (subset):
+
+- `index?: { whitelistColumns?: string[]; lazy?: boolean; lru?: { maxColumns: number } }`
+- `offloadToWorker?: boolean` — run index in a Worker (read with `snapshot()`)
+- `guardInDev?: boolean` — extra invariants in development (default true)
+
+Example (60 seconds):
+
+```ts
+import { createFormKernel } from 'react-zustand-form';
+
+const initial = {
+  u1: { firstName: 'Ada', lastName: 'Lovelace', email: 'ada@example.com', score: 42 },
+  u2: { firstName: 'Linus', lastName: 'Torvalds', email: 'linus@example.net', score: 11 },
+};
+
+const { useStore, gate, diffBus, versionMap, indexStore } = createFormKernel(initial, {
+  index: { whitelistColumns: ['firstName', 'lastName', 'email', 'score'] },
+});
+
+// Read
+const rows = useStore((s) => s.rows);
+
+// Atomic updates (keeps index/version/diffs in sync)
+gate.updateField('rows.u1.email', 'ada@new.co');
+gate.addRow('u3', { firstName: 'Grace', lastName: 'Hopper', email: 'grace@example.org', score: 77 });
+gate.renameRow('u1', 'user1');
+gate.removeRow('u2');
+gate.applyPatches({ 'rows.user1.score': 45, 'rows.u3.email': 'grace@ex.org' });
+
+// Column lookups
+const emails = indexStore.getColumn('email').byRow; // { user1: '...', u3: '...' }
+
+// Diffs (batched)
+const unsubscribe = diffBus.subscribe((batch) => console.log('diffs', batch));
+```
+
+ActionGate methods:
+
+- `applyPatches(map)`: batch server patches with light rebase
+- `updateField(path, value)`: update a single cell
+- `addRow(key, row)`: insert row
+- `removeRow(key)`: delete row
+- `renameRow(oldKey, newKey)`: rename row key
+
+Worker offload:
+
+- Pass `{ offloadToWorker: true }` to `createFormKernel`
+- Read indexes via `indexStore.snapshot()` instead of `getColumn()`
+- In custom setups, optionally set `globalThis.__WORKER_BASE_URL__` before creating the kernel if your bundler requires a base URL for the worker module
+
+Selectors and subscriptions:
+
+- `makeFieldSelector(rowKey, column)`: stable selector for a single cell
+- `subscribeUiByColumn(versionMap, column, onTick)`: column‑level version ticks for UI
+- `pullColumn(indexStore, column)`: fast access to a column’s row map
+
+Types and helpers are re‑exported from the root: `core/action-gate`, `core/diff-bus`, `core/path-selectors`, `core/version-map`, `core/path`, `core/store`.
+
+### Hook — `useForm<T>(options)`
+
+React hook for simple forms with un/controlled inputs, meta (`dirty`/`touched`/`errors`) and async `resolver`.
+
+- Returns: `{ Provider, register, handleSubmit, formState, store }`
+- Uncontrolled via `register(path, { uncontrolled: true })`
+- Controlled via `register(path)` (runs `resolver` after each change)
+
+Options:
+
+- `name?: string`, `defaultValues: T`, `devtools?: boolean`, `resolver?: (values) => Promise<{errors?: Record<string,string>}> | {errors?: ...}`
+
+Example:
+
+```tsx
+const { Provider, register, handleSubmit, formState } = useForm<{ email: string }>({
+  defaultValues: { email: '' },
+  resolver: async (v) => ({ errors: /@/.test(v.email) ? {} : { email: 'Invalid email' } }),
+});
+
+<Provider>
+  <input {...register('email')} />
+  {formState.errors.email && <small>{formState.errors.email}</small>}
+  <form onSubmit={handleSubmit(console.log)} />
+</Provider>
+```
+
+### DiffBus — `createDiffBus(strategy)`
+
+- Batches diffs, publishes per frame by default (`'animationFrame' | 'microtask' | 'idle'`)
+- `{ publish(diff|diff[]), subscribe(cb), setStrategy(s), getStrategy() }`
+
+### VersionMap — `createVersionMap()`
+
+- Per‑column monotonic `version`; per‑row counters in `versionByRow`
+- `{ ensureColumn(col), bump(col, rowKey|null), get(col), snapshot(), reset() }`
+
+### Column Index — `createIndexStore(opts)` / worker proxy
+
+- Methods: `{ getColumn(col), setCell(col,row,val), removeRow(key), renameRow(old,new), rebuildFromRows(rows), snapshot(), reset() }`
+- Options: `{ whitelistColumns?, lazy?, lru? }`
+
+### Path helpers — `parsePath`, `getAtPath`, `setAtPath`
+
+- Safe, immutable path utilities with prototype‑pollution guards
 
 ---
 
