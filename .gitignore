@@ -16,7 +16,8 @@ plugins/
 .smoke-tmp/
 
 # dependencies
-/node_modules
+node_modules/
+examples/node_modules/
 /.pnp
 .pnp.js
 

@@ -1,6 +1,6 @@
 {
   "name": "react-zustand-form",
-  "version": "1.1.0-beta.3",
+  "version": "1.1.0",
   "description": "Concurrent-safe, user-first form state for React 18/19 powered by Zustand. Supports uncontrolled or controlled fields, coalesced server updates (dirty-first), async validation, and a tiny vanilla store.",
   "keywords": [
     "react-zustand-form",
@@ -68,8 +68,15 @@
     "format": "prettier --write .",
     "release:dry": "npm publish --dry-run",
     "size": "npm run build && size-limit",
-    "smoke": "node scripts/smoke.cjs"
+    "smoke": "node scripts/smoke.cjs",
+    "examples:install": "npm --prefix examples install",
+    "examples:dev": "npm --prefix examples run dev",
+    "examples:build": "npm --prefix examples run build",
+    "examples:preview": "npm --prefix examples run preview"
   },
+  "workspaces": [
+    "examples"
+  ],
   "engines": {
     "node": ">=18.17"
   },

@@ -13,3 +13,5 @@ export * from './core/version-map';
 export * from './core/types';
 export * from './core/path';
 export * from './core/store';
+// Re-export hooks for root import convenience
+export * from './hooks';

@@ -19,7 +19,8 @@ export function createIndexStoreWorker(opts: IndexStoreOptions = {}): IndexStore
     return createIndexStore(opts);
   }
 
-  const base = resolveModuleUrl(__dirname, (globalThis as any).__WORKER_BASE_URL__);
+  // Avoid referencing __dirname in ESM/browser. resolveModuleUrl will use import.meta.url.
+  const base = resolveModuleUrl('', (globalThis as any).__WORKER_BASE_URL__);
   const worker = new Worker(new URL('./worker/index-worker.ts', base), { type: 'module' });  // Inject the real impl factory into worker global for initialisation handshake.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (worker as any).__indexStoreImpl = (o: IndexStoreOptions) => createIndexStore(o);
