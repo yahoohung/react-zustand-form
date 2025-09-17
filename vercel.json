@@ -1,0 +1,8 @@
+{
+  "buildCommand": "npm ci && npm run examples:install && npm run examples:build",
+  "outputDirectory": "examples/dist",
+  "framework": "vite",
+  "devCommand": "npm run examples:dev",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD src examples package.json"
+}
+

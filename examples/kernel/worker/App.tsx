@@ -2,6 +2,7 @@ import React from 'react';
 // In your app use: import { createFormKernel } from 'react-zustand-form'
 import { createFormKernel } from '../../../src';
 import { makeFieldSelector } from '../../../src/core/path-selectors';
+import Fps from '../../src/Fps';
 
 // Point worker loader to the library's index-store.worker file relative to this example.
 // This ensures Vite can resolve the worker URL during dev.
@@ -58,6 +59,22 @@ export default function KernelWorkerExample() {
     m.set(k, setTimeout(() => setUpdatedKeys((s) => { const n = new Set(s); n.delete(k); return n; }), 2000));
   }, []);
 
+  const ScoreCell: React.FC<{ rowKey: string }> = ({ rowKey }) => {
+    const value = kernel.useStore(makeFieldSelector(rowKey, 'score')) as number | undefined;
+    const [raw, setRaw] = React.useState(String(value ?? 0));
+    React.useEffect(() => { setRaw(String(value ?? 0)); }, [value]);
+    return (
+      <input
+        type="text"
+        inputMode="numeric"
+        value={raw}
+        onFocus={() => setDirtyKeys((s) => { const n = new Set(s); n.add(`${rowKey}.score`); return n; })}
+        onChange={(e) => { const txt = e.currentTarget.value; setRaw(txt); const n = Number(txt); if (Number.isFinite(n)) { markUpdated(`${rowKey}.score`); kernel.gate.updateField(`rows.${rowKey}.score`, n); }}}
+        className={updatedKeys.has(`${rowKey}.score`) ? 'cell-updated' : ''}
+      />
+    );
+  };
+
   return (
     <div>
       <section style={{ marginBottom: 12 }}>
@@ -111,22 +128,16 @@ export default function KernelWorkerExample() {
                         className={updatedKeys.has(`${rk}.email`) ? 'cell-updated' : ''}
                       />
                     </td>
-                    <td>
-                      <input
-                        type="number"
-                        value={String((r as any).score ?? '')}
-                        onFocus={() => setDirtyKeys((s) => { const n = new Set(s); n.add(`${rk}.score`); return n; })}
-                        onChange={(e) => { markUpdated(`${rk}.score`); kernel.gate.updateField(`rows.${rk}.score`, Number(e.currentTarget.value)); }}
-                        className={updatedKeys.has(`${rk}.score`) ? 'cell-updated' : ''}
-                      />
-                    </td>
+                  <td>
+                    <ScoreCell rowKey={rk} />
+                  </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
             <button onClick={() => kernel.gate.addRow('c3', { firstName: 'Carol', lastName: 'C.', email: 'carol@acme.org', score: 30 })}>addRow c3</button>
             <button onClick={() => kernel.gate.removeRow('b2')}>removeRow b2</button>
             <button onClick={() => kernel.gate.renameRow('a1', 'A1')}>renameRow a1→A1</button>
@@ -142,6 +153,7 @@ export default function KernelWorkerExample() {
             >
               apply server patches
             </button>
+            <div style={{ marginLeft: 'auto' }}>FPS: <Fps /></div>
           </div>
         </div>
 

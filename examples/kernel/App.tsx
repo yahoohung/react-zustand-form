@@ -3,6 +3,7 @@ import React from 'react';
 import { createFormKernel } from '../../src';
 import { makeFieldSelector } from '../../src/core/path-selectors';
 import { subscribeUiByColumn } from '../../src/core/tiered-subscriptions';
+import Fps from '../src/Fps';
 
 export default function KernelExample() {
   const initialRows = React.useMemo(
@@ -113,6 +114,26 @@ export default function KernelExample() {
   const onFocus = (rk: string, col: string) => setDirtyKeys((s) => { const n = new Set(s); n.add(`${rk}.${col}`); return n; });
   const onResetDirty = () => setDirtyKeys(new Set());
 
+  const ScoreCell: React.FC<{ rowKey: string }> = ({ rowKey }) => {
+    const value = kernel.useStore(makeFieldSelector(rowKey, 'score')) as number | undefined;
+    const [raw, setRaw] = React.useState(String(value ?? 0));
+    React.useEffect(() => { setRaw(String(value ?? 0)); }, [value]);
+    return (
+      <input
+        type="text"
+        inputMode="numeric"
+        value={raw}
+        onFocus={() => onFocus(rowKey, 'score')}
+        onChange={(e) => {
+          const txt = e.currentTarget.value; setRaw(txt);
+          const n = Number(txt);
+          if (Number.isFinite(n)) { markUpdated(`${rowKey}.score`); kernel.gate.updateField(`rows.${rowKey}.score`, n); }
+        }}
+        className={updatedKeys.has(`${rowKey}.score`) ? 'cell-updated' : ''}
+      />
+    );
+  };
+
   return (
     <div>
       <section style={{ marginBottom: 12 }}>
@@ -166,22 +187,14 @@ export default function KernelExample() {
                       className={updatedKeys.has(`${rk}.email`) ? 'cell-updated' : ''}
                     />
                   </td>
-                  <td>
-                    <input
-                      type="number"
-                      value={String((r as any).score ?? '')}
-                      onFocus={() => onFocus(rk, 'score')}
-                      onChange={(e) => { markUpdated(`${rk}.score`); kernel.gate.updateField(`rows.${rk}.score`, Number(e.currentTarget.value)); }}
-                      className={updatedKeys.has(`${rk}.score`) ? 'cell-updated' : ''}
-                    />
-                  </td>
+                  <td><ScoreCell rowKey={rk} /></td>
                 </tr>
               ))}
               </tbody>
             </table>
           </div>
 
-          <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
             <button onClick={() => kernel.gate.addRow('u3', { firstName: 'Grace', lastName: 'Hopper', email: 'grace@example.org', score: 77 })}>addRow u3</button>
             <button onClick={() => kernel.gate.removeRow('u2')}>removeRow u2</button>
             <button onClick={() => kernel.gate.renameRow('u1', 'user1')}>renameRow u1→user1</button>
@@ -200,6 +213,7 @@ export default function KernelExample() {
               apply server patches
             </button>
             <button className="ghost" onClick={onResetDirty}>reset user edits</button>
+            <div style={{ marginLeft: 'auto' }}>FPS: <Fps /></div>
           </div>
         </div>
 

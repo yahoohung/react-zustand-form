@@ -23,6 +23,9 @@ body {
   padding: 24px;
 }
 
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.topbar .badge img { height: 22px; vertical-align: middle; }
+
 .grid {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 1.15fr);
@@ -56,6 +59,9 @@ body {
   border-color: #bfdbfe; /* blue-200 */
   color: #1d4ed8;        /* blue-700 */
 }
+
+/* Force a new flex row in the nav */
+.nav-break { flex-basis: 100%; height: 0; }
 
 .card {
   background: var(--card);
@@ -96,6 +102,18 @@ button.ghost { background: transparent; color: var(--text); border-color: var(--
 
 pre { background: #0b1220; color: #e2e8f0; padding: 10px; border-radius: 8px; overflow: auto; max-height: 360px; }
 
+/* Markdown rendering */
+.md { line-height: 1.6; }
+.md h1, .md h2, .md h3, .md h4, .md h5 { margin: 1em 0 0.4em; }
+.md p { margin: 0.5em 0; }
+.md a { color: var(--primary); text-decoration: none; }
+.md a:hover { text-decoration: underline; }
+.md code { background: #f1f5f9; padding: 2px 6px; border-radius: 6px; }
+.md pre code { background: transparent; padding: 0; }
+.md pre { max-height: 480px; }
+.md ul, .md ol { padding-left: 1.25rem; margin: 0.5rem 0; }
+.md blockquote { border-left: 3px solid var(--border); margin: 0.6rem 0; padding-left: 0.8rem; color: var(--muted); }
+
 /* Highlight for server-updated cells */
 @keyframes cellPulse {
   0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.5); border-color: #60a5fa; }
@@ -104,3 +122,11 @@ pre { background: #0b1220; color: #e2e8f0; padding: 10px; border-radius: 8px; ov
 .cell-updated {
   animation: cellPulse 2s ease-out 1;
 }
+
+/* Mega grid styles */
+.cell-dirty { border-color: #ef4444 !important; }
+@keyframes changedFade {
+  0% { background: #fef3c7; }
+  100% { background: transparent; }
+}
+.cell-changed { animation: changedFade 2s ease-out 1; }

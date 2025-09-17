@@ -12,5 +12,5 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true
   },
-  "include": ["src", "useForm", "kernel", "backend-sync", "validation", "perf"]
+  "include": ["src", "useForm", "kernel", "backend-sync", "validation", "perf", "mega", "formik-mega", "rhf-mega", "perf-battle"]
 }
