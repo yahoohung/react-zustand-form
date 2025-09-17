@@ -1,6 +1,6 @@
 import React from 'react';
 // In your app: import { useForm } from 'react-zustand-form'
-import { useForm } from '../../src';
+import { useForm } from 'react-zustand-form';
 import { z } from 'zod';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';

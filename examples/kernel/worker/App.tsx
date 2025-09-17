@@ -1,12 +1,10 @@
 import React from 'react';
 // In your app use: import { createFormKernel } from 'react-zustand-form'
-import { createFormKernel } from '../../../src';
-import { makeFieldSelector } from '../../../src/core/path-selectors';
+import { createFormKernel, makeFieldSelector } from 'react-zustand-form';
 import Fps from '../../src/Fps';
 
-// Point worker loader to the library's index-store.worker file relative to this example.
-// This ensures Vite can resolve the worker URL during dev.
-(globalThis as any).__WORKER_BASE_URL__ = new URL('../../../src/index/index-store.worker.ts', import.meta.url).toString();
+// When consuming the built package (as in Vercel builds), the worker URL
+// is resolved internally by the library. No override needed here.
 
 export default function KernelWorkerExample() {
   const initialRows = React.useMemo(

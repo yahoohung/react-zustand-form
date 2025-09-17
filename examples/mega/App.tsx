@@ -1,6 +1,5 @@
 import React from 'react';
-import { createFormKernel } from '../../src';
-import { makeFieldSelector } from '../../src/core/path-selectors';
+import { createFormKernel, makeFieldSelector } from 'react-zustand-form';
 import Fps from '../src/Fps';
 import FpsChart from '../src/FpsChart';
 import PerfDescription from '../src/PerfDescription';

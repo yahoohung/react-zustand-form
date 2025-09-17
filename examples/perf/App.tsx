@@ -1,6 +1,5 @@
 import React from 'react';
-import { createFormKernel } from '../../src';
-import { makeFieldSelector } from '../../src/core/path-selectors';
+import { createFormKernel, makeFieldSelector } from 'react-zustand-form';
 
 type Rows = Record<string, Record<string, unknown>>;
 
@@ -124,4 +123,3 @@ export default function PerfDemo() {
     </div>
   );
 }
-

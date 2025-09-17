@@ -1,8 +1,6 @@
 import React from 'react';
 // In your app use: import { createFormKernel } from 'react-zustand-form'
-import { createFormKernel } from '../../src';
-import { makeFieldSelector } from '../../src/core/path-selectors';
-import { subscribeUiByColumn } from '../../src/core/tiered-subscriptions';
+import { createFormKernel, makeFieldSelector, subscribeUiByColumn } from 'react-zustand-form';
 import Fps from '../src/Fps';
 
 export default function KernelExample() {

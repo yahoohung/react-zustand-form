@@ -1,6 +1,6 @@
 import React from 'react';
 // In your app use: import { useForm } from 'react-zustand-form'
-import { useForm } from '../../../src';
+import { useForm } from 'react-zustand-form';
 
 type Values = { name: string; email: string };
 

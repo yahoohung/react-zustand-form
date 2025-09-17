@@ -1,0 +1,2 @@
+import {useSyncExternalStore}from'react';function u(n){let t=()=>n.snapshot(),s=o=>n.subscribe(o);return function(){return useSyncExternalStore(s,t,t)}}export{u as createSnapshotStore};//# sourceMappingURL=useIndexSnapshot.mjs.map
+//# sourceMappingURL=useIndexSnapshot.mjs.map

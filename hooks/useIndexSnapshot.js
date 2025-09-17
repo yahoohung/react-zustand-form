@@ -1,0 +1,2 @@
+'use strict';var react=require('react');function u(n){let t=()=>n.snapshot(),s=o=>n.subscribe(o);return function(){return react.useSyncExternalStore(s,t,t)}}exports.createSnapshotStore=u;//# sourceMappingURL=useIndexSnapshot.js.map
+//# sourceMappingURL=useIndexSnapshot.js.map

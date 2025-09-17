@@ -1,7 +1,7 @@
 import React from 'react';
 // In your app, import from 'react-zustand-form' and 'react-zustand-form/plugins'
-import { createFormKernel } from '../../src';
-import { createBackendSync } from '../../src/plugins';
+import { createFormKernel } from 'react-zustand-form';
+import { createBackendSync } from 'react-zustand-form/plugins/index';
 
 type Rows = Record<string, { name?: string; email?: string; score?: number }>;
 
