@@ -18,6 +18,11 @@ In the browser, switch between demos with the hash:
 - `/#backend-sync`
 - `/#validation`
 - `/#perf`
+- `/#mega`
+- `/#rhf-mega`
+- `/#formik-mega`
+- `/#perf-battle`
+- `/#about`
 
 What / Why / How
 
@@ -59,11 +64,30 @@ Structure
   - `backend-sync/App.tsx`: Demonstrates `createBackendSync` (debounce/coalesce/retry, keep-dirty server patches).
   - `validation/App.tsx`: Shows `resolver` usage with Zod or AJV.
   - `perf/App.tsx`: Large grid (e.g., 5k fields) using field selectors; shows smooth updates and FPS meter.
+  - `mega/App.tsx`: 10k+ fields with dirty (red border), changed (yellow fade), debounced validation, auto server updates, and blur-to-backend logging.
+  - `rhf-mega/App.tsx`: Same UX as mega but built on react-hook-form for a side-by-side comparison.
+  - `formik-mega/App.tsx`: Same UX again but built on Formik to compare ergonomics and perf.
+  - `perf-battle/App.tsx`: One-stop page explaining the shared logic and quick links to switch across the three 10k demos.
+  - `about/App.tsx`: Mirrors the repository README (imported as raw text via Vite), so it stays in sync without duplication.
 
 Vite wiring
 
 - `examples/package.json`: Contains dev/build scripts and local deps.
 - `examples/index.html` + `examples/src/main.tsx`: App entry with a small hash switch.
 - `examples/vite.config.ts`: Allows importing from `../../../src` so the examples use local source.
+
+Deploy to Vercel (Option A)
+
+- Repo root is the Vercel project root (examples import local `../../src`).
+- `vercel.json` at repo root configures build and output.
+
+Steps
+
+- Import this repo in Vercel
+- Vercel uses `vercel.json` automatically:
+  - Build Command: `npm ci && npm run examples:install && npm run examples:build`
+  - Output Directory: `examples/dist`
+  - Framework: `vite`
+  - Dev Command (optional): `npm run examples:dev`
 
 > Note: These examples are not wired to a dev server here to keep devDeps lean. Copy one into your app to try it out.
