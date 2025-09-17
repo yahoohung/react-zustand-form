@@ -23,7 +23,7 @@ export default function BackendSyncExample() {
     [initialRows]
   );
 
-  const rows = kernel.useStore((s) => s.rows);
+  const rows = kernel.useStore((s: { rows: any; }) => s.rows);
 
   // Push logs
   const [logs, setLogs] = React.useState<string[]>([]);
