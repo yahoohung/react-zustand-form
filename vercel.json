@@ -3,5 +3,5 @@
   "outputDirectory": "examples/dist",
   "framework": "vite",
   "devCommand": "npm run examples:dev",
-  "ignoreCommand": "bash -lc 'git rev-parse --verify HEAD^ >/dev/null 2>&1 || exit 1; git diff --quiet HEAD^ HEAD -- src examples package.json'"
+  "ignoreCommand": "sh -c 'git rev-parse --verify HEAD^ >/dev/null 2>&1 || exit 1; git diff --quiet HEAD^ HEAD -- src examples package.json'"
 }
