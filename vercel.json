@@ -1,6 +1,6 @@
 {
-  "buildCommand": "npm ci && npm install && npm run examples:install && npm run examples:build",
-  "outputDirectory": "examples/dist",
-  "framework": "vite",
-  "devCommand": "npm run examples:dev"
+  "installCommand": "npm ci",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "devCommand": "npm run dev"
 }
