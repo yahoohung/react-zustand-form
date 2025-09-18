@@ -94,9 +94,6 @@
     "examples:build": "npm --prefix examples run build",
     "examples:preview": "npm --prefix examples run preview"
   },
-  "workspaces": [
-    "examples"
-  ],
   "engines": {
     "node": ">=18.17"
   },
