@@ -39,6 +39,26 @@
         "default": "./index.js"
       }
     },
+    "./plugins": {
+      "import": {
+        "types": "./esm/plugins/index.d.mts",
+        "default": "./esm/plugins/index.mjs"
+      },
+      "default": {
+        "types": "./plugins/index.d.ts",
+        "default": "./plugins/index.js"
+      }
+    },
+    "./plugins/*": {
+      "import": {
+        "types": "./esm/plugins/*.d.mts",
+        "default": "./esm/plugins/*.mjs"
+      },
+      "default": {
+        "types": "./plugins/*.d.ts",
+        "default": "./plugins/*.js"
+      }
+    },
     "./*": {
       "import": {
         "types": "./esm/*.d.mts",
@@ -74,9 +94,6 @@
     "examples:build": "npm --prefix examples run build",
     "examples:preview": "npm --prefix examples run preview"
   },
-  "workspaces": [
-    "examples"
-  ],
   "engines": {
     "node": ">=18.17"
   },
