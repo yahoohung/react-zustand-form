@@ -11,7 +11,7 @@
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-zustand-form": "npm:react-zustand-form@1.1.1",
+    "react-zustand-form": "npm:react-zustand-form@1.2.0",
     "zustand": "^5.0.8",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
