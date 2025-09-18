@@ -10,6 +10,13 @@ const SRC = join(ROOT, 'src');
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      external: [
+        /^node:.*/,
+      ]
+    }
+  },  
   server: {
     fs: {
       // allow importing local source files from this monorepo (../../../src)
