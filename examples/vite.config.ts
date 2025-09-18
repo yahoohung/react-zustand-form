@@ -1,22 +1,15 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { resolve, join } from 'node:path';
+import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 // https://vitejs.dev/config/
 const HERE = fileURLToPath(new URL('.', import.meta.url));
 const ROOT = resolve(HERE, '..');
-const SRC = join(ROOT, 'src');
+// Note: allow reading files from repo root during dev
 
 export default defineConfig({
   plugins: [react()],
-  build: {
-    rollupOptions: {
-      external: [
-        /^node:.*/,
-      ]
-    }
-  },  
   server: {
     fs: {
       // allow importing local source files from this monorepo (../../../src)
