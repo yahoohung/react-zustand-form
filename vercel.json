@@ -1,8 +1,8 @@
 {
   "version": 2,
   "framework": "vite",
-  "installCommand": "npm ci",
-  "buildCommand": "npm run build && npm run prepublishOnly && npm --prefix examples ci && npm --prefix examples run build",
+  "installCommand": "npm --prefix examples install --no-audit --no-fund",
+  "buildCommand": "npm --prefix examples run build",
   "outputDirectory": "examples/dist",
-  "devCommand": "npm run examples:dev"
+  "devCommand": "npm --prefix examples run dev"
 }
