@@ -1,8 +1,0 @@
-{
-  "version": 2,
-  "framework": "vite",
-  "installCommand": "npm install && npm --prefix examples install --no-audit --no-fund",
-  "buildCommand": "npm --prefix examples run build",
-  "outputDirectory": "examples/dist",
-  "devCommand": "npm --prefix examples run dev"
-}
