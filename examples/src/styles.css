@@ -130,3 +130,68 @@ pre { background: #0b1220; color: #e2e8f0; padding: 10px; border-radius: 8px; ov
   100% { background: transparent; }
 }
 .cell-changed { animation: changedFade 2s ease-out 1; }
+
+/* Sudoku demo */
+.sudoku { display: grid; gap: 18px; }
+.sudoku header p { color: var(--muted); }
+.sudoku-board { overflow-x: auto; }
+.sudoku-board table { margin: 0 auto; border-collapse: collapse; width: auto; }
+.sudoku-board td { padding: 0; border: 1px solid var(--border); }
+.cell-wrapper { width: 48px; height: 48px; }
+.cell-wrapper.r0 { border-top: 2px solid #1d4ed8; }
+.cell-wrapper.r2, .cell-wrapper.r5, .cell-wrapper.r8 { border-bottom: 2px solid #1d4ed8; }
+.cell-wrapper.c0 { border-left: 2px solid #1d4ed8; }
+.cell-wrapper.c2, .cell-wrapper.c5, .cell-wrapper.c8 { border-right: 2px solid #1d4ed8; }
+.sudoku-cell {
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  border: none;
+  font-size: 1.1rem;
+  background: transparent;
+}
+.sudoku-cell:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
+}
+.sudoku-cell.locked {
+  background: #e2e8f0;
+  font-weight: 600;
+}
+.sudoku-panels { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.sudoku-panels section { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.sudoku-panels ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.sudoku-panels li { font-size: 0.95rem; }
+
+/* 2048 demo */
+.game2048 { display: grid; gap: 18px; --tile-size: 70px; --tile-gap: 10px; --tile-unit: calc(var(--tile-size) + var(--tile-gap)); }
+.game2048 header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; }
+.game2048 .muted { color: var(--muted); max-width: 420px; }
+.game2048 .scoreboard { display: flex; gap: 12px; align-items: center; }
+.game2048 .score { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; font-weight: 600; min-width: 110px; text-align: center; }
+.game2048 .board { position: relative; width: calc(var(--tile-size) * 4 + var(--tile-gap) * 5); height: calc(var(--tile-size) * 4 + var(--tile-gap) * 5); padding: var(--tile-gap); background: #bbada0; border-radius: 12px; margin: 0 auto; }
+.game2048 .board-grid { position: absolute; inset: var(--tile-gap); display: grid; grid-template-columns: repeat(4, var(--tile-size)); grid-template-rows: repeat(4, var(--tile-size)); gap: var(--tile-gap); }
+.game2048 .grid-cell { background: rgba(238, 228, 218, 0.35); border-radius: 6px; }
+.game2048 .tile-layer { position: absolute; inset: var(--tile-gap); pointer-events: none; }
+.game2048 .tile { position: absolute; top: 0; left: 0; width: var(--tile-size); height: var(--tile-size); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; color: #f9f6f2; will-change: transform; transition: transform 160ms ease; }
+.game2048 .tile-0 { background: rgba(238, 228, 218, 0.15); color: transparent; }
+.game2048 .tile-2 { background: #eee4da; color: #776e65; }
+.game2048 .tile-4 { background: #ede0c8; color: #776e65; }
+.game2048 .tile-8 { background: #f2b179; }
+.game2048 .tile-16 { background: #f59563; }
+.game2048 .tile-32 { background: #f67c5f; }
+.game2048 .tile-64 { background: #f65e3b; }
+.game2048 .tile-128 { background: #edcf72; }
+.game2048 .tile-256 { background: #edcc61; }
+.game2048 .tile-512 { background: #edc850; }
+.game2048 .tile-1024 { background: #edc53f; }
+.game2048 .tile-2048 { background: #edc22e; }
+.game2048 .controls { display: grid; place-items: center; gap: 10px; }
+.game2048 .controls button { min-width: 54px; min-height: 44px; }
+.game2048 .controls-row { display: flex; gap: 12px; }
+.game2048 .status { text-align: center; min-height: 1.2em; font-weight: 600; color: var(--muted); }
+.game2048 .status.won { color: #16a34a; }
+.game2048 .status.lost { color: #dc2626; }
+.game2048 .summaries { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.game2048 .summaries section { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.game2048 .summaries ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }

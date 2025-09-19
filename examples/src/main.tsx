@@ -7,6 +7,8 @@ import Kernel from '../kernel/App';
 import KernelWorker from '../kernel/worker/App';
 import BackendSync from '../backend-sync/App';
 import Validation from '../validation/App';
+import Sudoku from '../sudoku/App';
+import Game2048 from '../game2048/App';
 import Perf from '../perf/App';
 import Mega from '../mega/App';
 import RhfMega from '../rhf-mega/App';
@@ -27,6 +29,10 @@ function pick(which: string) {
       return Kernel;
     case 'backend-sync':
       return BackendSync;
+    case 'sudoku':
+      return Sudoku;
+    case '2048':
+      return Game2048;
     case 'validation':
       return Validation;
     case 'perf':
@@ -70,6 +76,8 @@ function AppShell() {
         <a href="#kernel" className={which === 'kernel' ? 'active' : ''}>Kernel</a>
         <a href="#kernel-worker" className={which === 'kernel-worker' ? 'active' : ''}>Kernel + worker</a>
         <a href="#backend-sync" className={which === 'backend-sync' ? 'active' : ''}>Backend sync</a>
+        <a href="#sudoku" className={which === 'sudoku' ? 'active' : ''}>Sudoku</a>
+        <a href="#2048" className={which === '2048' ? 'active' : ''}>2048</a>
         <a href="#validation" className={which === 'validation' ? 'active' : ''}>Validation (Zod/AJV)</a>
         <span className="nav-break" />
         <a href="#perf-battle" className={which === 'perf-battle' ? 'active' : ''}>Perf battle</a>
