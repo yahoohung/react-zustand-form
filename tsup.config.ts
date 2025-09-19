@@ -1,18 +1,56 @@
 // tsup.config.ts
 import { defineConfig } from 'tsup';
+import { existsSync, readdirSync } from 'node:fs';
+import { join, relative, extname } from 'node:path';
+
+const ROOT = __dirname;
+
+const EXCLUDE_PATTERNS = [/\.d\.ts$/i, /\.test\.tsx?$/i, /\.spec\.tsx?$/i, /\.stories\.tsx?$/i];
+
+function collectEntries(subdir: string): string[] {
+  const start = join(ROOT, subdir);
+  if (!existsSync(start)) return [];
+
+  const results: string[] = [];
+  const stack = [start];
+
+  while (stack.length) {
+    const current = stack.pop()!;
+    for (const dirent of readdirSync(current, { withFileTypes: true })) {
+      const fullPath = join(current, dirent.name);
+      if (dirent.isDirectory()) {
+        stack.push(fullPath);
+        continue;
+      }
+
+      if (!dirent.isFile()) continue;
+
+      const ext = extname(dirent.name);
+      if (ext !== '.ts' && ext !== '.tsx' && ext !== '.mts' && ext !== '.cts') continue;
+      if (EXCLUDE_PATTERNS.some((rx) => rx.test(dirent.name))) continue;
+
+      const relPath = relative(ROOT, fullPath).replace(/\\/g, '/');
+      results.push(relPath);
+    }
+  }
+
+  return results;
+}
+
+const entryFiles = new Set<string>([
+  'src/index.ts',
+  'src/dev.ts',
+]);
+
+for (const path of collectEntries('src/hooks')) entryFiles.add(path);
+for (const path of collectEntries('src/plugins')) entryFiles.add(path);
+for (const path of collectEntries('src/index')) entryFiles.add(path);
+for (const path of collectEntries('src/utils')) entryFiles.add(path);
+
+const entries = Array.from(entryFiles);
 
 export default defineConfig({
-  entry: [
-    'src/index.ts',
-    'src/index.tsx',
-    'src/plugins/**/*.ts',
-    'src/plugins/**/*.tsx',
-    'src/hooks/**/*.ts',
-    'src/hooks/**/*.tsx',
-    // Additional public subpaths
-    'src/dev.ts',
-    'src/utils/**/*.ts'
-  ],
+  entry: entries,
   format: ['esm', 'cjs'],
   dts: true,
   sourcemap: true,
