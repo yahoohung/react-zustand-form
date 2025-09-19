@@ -40,6 +40,8 @@ function collectEntries(subdir: string): string[] {
 const entryFiles = new Set<string>([
   'src/index.ts',
   'src/dev.ts',
+  'src/plugins/index.ts',
+  'src/hooks/index.ts',
 ]);
 
 for (const path of collectEntries('src/hooks')) entryFiles.add(path);
