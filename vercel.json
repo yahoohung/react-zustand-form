@@ -1,7 +1,7 @@
 {
   "version": 2,
   "framework": "vite",
-  "installCommand": "npm ci",
+  "installCommand": "npm run examples:install",
   "buildCommand": "npm run examples:build",
   "outputDirectory": "examples/dist",
   "devCommand": "npm run examples:dev"
