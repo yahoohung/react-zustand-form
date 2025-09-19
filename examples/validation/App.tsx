@@ -66,9 +66,9 @@ export default function ValidationExample() {
       <section style={{ marginBottom: 12 }}>
         <h3 style={{ margin: '0 0 6px' }}>Validation with Zod or AJV</h3>
         <ul style={{ margin: 0, paddingLeft: 18 }}>
-          <li><b>What</b>: Use your favourite schema library through the <code>resolver</code>.</li>
-          <li><b>Why</b>: Centralised, testable validation with friendly error messages.</li>
-          <li><b>How</b>: Return an object like <code>errors: Record&lt;string, string&gt;</code> from the resolver. Controlled fields trigger it on change.</li>
+          <li><b>What</b>: Plug any schema library into the <code>resolver</code> contract.</li>
+          <li><b>Why</b>: Centralise rules once and reuse them across forms, tests, and backend checks.</li>
+          <li><b>How</b>: Return <code>{'{'} errors: Record&lt;string, string&gt; {'}'}</code>; controlled fields run it on change while uncontrolled ones run it on submit.</li>
         </ul>
       </section>
 

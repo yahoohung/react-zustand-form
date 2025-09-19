@@ -79,9 +79,9 @@ export default function PerfDemo() {
       <section style={{ marginBottom: 12 }}>
         <h3 style={{ margin: '0 0 6px' }}>Perf: large grid (fine-grained updates)</h3>
         <ul style={{ margin: 0, paddingLeft: 18 }}>
-          <li><b>What</b>: Grid of independent inputs wired via field selectors.</li>
-          <li><b>Why</b>: Only the edited cells re-render; rest stay still.</li>
-          <li><b>How</b>: Each cell uses <code>useStore(makeFieldSelector(row,col))</code>; updates go through <code>gate.updateField</code>/<code>applyPatches</code>.</li>
+          <li><b>What</b>: A dense grid where every cell subscribes to its own slice of the store.</li>
+          <li><b>Why</b>: Editing one cell should not wake thousands of neighbours—selectors keep the repaint scope tiny.</li>
+          <li><b>How</b>: Each cell calls <code>useStore(makeFieldSelector(row,col))</code> and writes through <code>gate.updateField</code> or batched <code>applyPatches</code>.</li>
         </ul>
       </section>
 
@@ -124,4 +124,3 @@ export default function PerfDemo() {
     </div>
   );
 }
-

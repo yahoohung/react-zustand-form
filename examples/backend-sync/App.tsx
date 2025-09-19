@@ -76,9 +76,9 @@ export default function BackendSyncExample() {
       <section style={{ marginBottom: 12 }}>
         <h3 style={{ margin: '0 0 6px' }}>Backend sync (diffs in/out)</h3>
         <ul style={{ margin: 0, paddingLeft: 18 }}>
-          <li><b>What</b>: Collect local diffs, debounce/coalesce, push to backend; apply server patches back.</li>
-          <li><b>Why</b>: Avoid chatty network calls and preserve the user’s edits (keep-dirty) when server updates arrive.</li>
-          <li><b>How</b>: <code>createBackendSync</code> subscribes to the diff bus; call <code>applyServerPatch</code> with server changes; use <code>retry</code>/<code>flush</code> as needed.</li>
+          <li><b>What</b>: Batch local diffs, send them to the server, and replay server patches back into the store.</li>
+          <li><b>Why</b>: Keeps chatter off the wire and respects user edits thanks to the keep-dirty policy.</li>
+          <li><b>How</b>: Wire up <code>createBackendSync</code> with your push function, then call <code>flush</code>/<code>applyServerPatch</code>/<code>retry</code> hooks when needed.</li>
         </ul>
       </section>
 

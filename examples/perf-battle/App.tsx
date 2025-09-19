@@ -18,12 +18,9 @@ export default function PerfBattle() {
       <section style={{ marginBottom: 12 }}>
         <h3 style={{ margin: '0 0 6px' }}>Performance comparison — identical logic</h3>
         <ul style={{ margin: 0, paddingLeft: 18 }}>
-          <li><b>Scope</b>: Three 10k-grid demos with the same behavior implemented using <code>react-zustand-form</code> kernel, <code>react-hook-form</code>, and <code>Formik</code>.</li>
-          <li>
-            <b>Behavior</b>: dirty/red (keep‑dirty), changed/yellow (2s), debounced validation (0..9999),
-            periodic server updates (1s, configurable), blur → backend log, and draft input (no NaN while typing).
-          </li>
-          <li><b>Usage</b>: Select a demo, adjust grid size and update rate, and compare FPS with the last‑10s chart.</li>
+          <li><b>Scope</b>: Three 10k-field demos with the same requirements, built once with the kernel, once with React Hook Form, and once with Formik.</li>
+          <li><b>Rules</b>: dirty = red border, changes pulse yellow, validation accepts 0–9999, random server updates land every second, blur logs the value.</li>
+          <li><b>How to use</b>: Jump to a tab, tweak grid size and update rate, and watch both the live FPS counter and the trailing chart.</li>
         </ul>
       </section>
 
