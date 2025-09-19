@@ -139,9 +139,9 @@ export default function KernelExample() {
       <section style={{ marginBottom: 12 }}>
         <h3 style={{ margin: '0 0 6px' }}>Kernel (rows × columns)</h3>
         <ul style={{ margin: 0, paddingLeft: 18 }}>
-          <li><b>What</b>: Table-like state with a small API: update cell, add/remove/rename row, apply patches.</li>
-          <li><b>Why</b>: Keep index, versions and diffs in sync for fast lookups and external syncing.</li>
-          <li><b>How</b>: Use <code>gate.updateField</code>/<code>addRow</code>/<code>removeRow</code>/<code>renameRow</code>; subscribe to <code>diffBus</code>; read column index via <code>indexStore.getColumn(col)</code>.</li>
+          <li><b>What</b>: Manage grid-style data with helpers to update cells, add/remove/rename rows, and accept server patches.</li>
+          <li><b>Why</b>: Kernels keep indexes, version counters, and diff streams aligned so large tables stay fast and easy to sync elsewhere.</li>
+          <li><b>How</b>: Call <code>gate.updateField</code>/<code>addRow</code>/<code>removeRow</code>/<code>renameRow</code>, listen to <code>diffBus</code>, and read live column data via <code>indexStore.getColumn(name)</code>.</li>
         </ul>
       </section>
 

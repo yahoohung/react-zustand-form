@@ -65,18 +65,18 @@ function AppShell() {
       </div>
       <div className="nav">
         <a href="#about" className={which === 'about' ? 'active' : ''}>About</a>
-        <a href="#uncontrolled" className={which === 'uncontrolled' ? 'active' : ''}>uncontrolled</a>
-        <a href="#controlled" className={which === 'controlled' ? 'active' : ''}>controlled</a>
-        <a href="#kernel" className={which === 'kernel' ? 'active' : ''}>kernel</a>
-        <a href="#kernel-worker" className={which === 'kernel-worker' ? 'active' : ''}>kernel-worker</a>
-        <a href="#backend-sync" className={which === 'backend-sync' ? 'active' : ''}>backend-sync</a>
-        <a href="#validation" className={which === 'validation' ? 'active' : ''}>validation (zod/ajv)</a>
+        <a href="#uncontrolled" className={which === 'uncontrolled' ? 'active' : ''}>Uncontrolled</a>
+        <a href="#controlled" className={which === 'controlled' ? 'active' : ''}>Controlled</a>
+        <a href="#kernel" className={which === 'kernel' ? 'active' : ''}>Kernel</a>
+        <a href="#kernel-worker" className={which === 'kernel-worker' ? 'active' : ''}>Kernel + worker</a>
+        <a href="#backend-sync" className={which === 'backend-sync' ? 'active' : ''}>Backend sync</a>
+        <a href="#validation" className={which === 'validation' ? 'active' : ''}>Validation (Zod/AJV)</a>
         <span className="nav-break" />
-        <a href="#perf-battle" className={which === 'perf-battle' ? 'active' : ''}>perf battle</a>
-        <a href="#perf" className={which === 'perf' ? 'active' : ''}>perf (5k fields)</a>
-        <a href="#mega" className={which === 'mega' ? 'active' : ''}>react-zustand-form perf(10k)</a>
-        <a href="#rhf-mega" className={which === 'rhf-mega' ? 'active' : ''}>react-hook-form perf (10k)</a>
-        <a href="#formik-mega" className={which === 'formik-mega' ? 'active' : ''}>Formik perf (10k)</a>
+        <a href="#perf-battle" className={which === 'perf-battle' ? 'active' : ''}>Perf battle</a>
+        <a href="#perf" className={which === 'perf' ? 'active' : ''}>Perf (5k grid)</a>
+        <a href="#mega" className={which === 'mega' ? 'active' : ''}>RZF mega (10k)</a>
+        <a href="#rhf-mega" className={which === 'rhf-mega' ? 'active' : ''}>RHF mega (10k)</a>
+        <a href="#formik-mega" className={which === 'formik-mega' ? 'active' : ''}>Formik mega (10k)</a>
 
       </div>
       <div className="card">

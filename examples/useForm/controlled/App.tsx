@@ -16,11 +16,11 @@ export default function ControlledExample() {
   return (
     <Provider>
       <section style={{ marginBottom: 12 }}>
-        <h3 style={{ margin: '0 0 6px' }}>Controlled input (store-backed)</h3>
+        <h3 style={{ margin: '0 0 6px' }}>Controlled input (store drives the value)</h3>
         <ul style={{ margin: 0, paddingLeft: 18 }}>
-          <li><b>What</b>: Input <code>value</code> is read from the store; updates write to the store.</li>
-          <li><b>Why</b>: Needed when you must bind UI directly to state or run validation on every change.</li>
-          <li><b>How</b>: Use <code>register(path)</code> without the uncontrolled flag; optional <code>resolver</code> sets <code>formState.errors</code>.</li>
+          <li><b>What</b>: The field reads and writes through the store, so React state is always the source of truth.</li>
+          <li><b>Why</b>: Use this pattern when you need validation on every keystroke or want to react to value changes instantly.</li>
+          <li><b>How</b>: Call <code>register(path)</code> without the uncontrolled flag; the optional <code>resolver</code> fills <code>formState.errors</code> as you type.</li>
         </ul>
       </section>
       <label>

@@ -78,11 +78,11 @@ export default function KernelWorkerExample() {
   return (
     <div>
       <section style={{ marginBottom: 12 }}>
-        <h3 style={{ margin: '0 0 6px' }}>Kernel + Worker offload</h3>
+        <h3 style={{ margin: '0 0 6px' }}>Kernel + worker offload</h3>
         <ul style={{ margin: 0, paddingLeft: 18 }}>
-          <li><b>What</b>: Column indexing runs inside a Web Worker; UI stays responsive.</li>
-          <li><b>Why</b>: Heavy indexing on big datasets can block the main thread; offload keeps UX smooth.</li>
-          <li><b>How</b>: Pass <code>offloadToWorker: true</code> to the kernel; read indexes via <code>snapshot()</code> instead of <code>getColumn()</code>.</li>
+          <li><b>What</b>: Column indexing runs in a Web Worker so the UI thread only renders.</li>
+          <li><b>Why</b>: On big tables the indexer can get heavy—offloading keeps typing and scrolling snappy.</li>
+          <li><b>How</b>: Enable <code>offloadToWorker: true</code> and read data with <code>indexStore.snapshot()</code> (workers can’t expose synchronous getters).</li>
         </ul>
       </section>
 

@@ -20,11 +20,11 @@ export default function UncontrolledExample() {
   return (
     <Provider>
       <section style={{ marginBottom: 12 }}>
-        <h3 style={{ margin: '0 0 6px' }}>Uncontrolled inputs (user-first)</h3>
+        <h3 style={{ margin: '0 0 6px' }}>Uncontrolled inputs (DOM owns the value)</h3>
         <ul style={{ margin: 0, paddingLeft: 18 }}>
-          <li><b>What</b>: Minimal setup; inputs own their value, library tracks meta.</li>
-          <li><b>Why</b>: Best UX for simple forms; least React re-renders.</li>
-          <li><b>How</b>: <code>register(path, {'{'} uncontrolled: true {'}'})</code> adds defaultValue/ref/onChange/onBlur; values are read from the DOM on submit; async validation is supported via <code>resolver</code>.</li>
+          <li><b>What</b>: Leave the input in charge of its value while the store keeps track of dirty/touched state and validation.</li>
+          <li><b>Why</b>: Ideal for small forms—almost no rerenders and the browser handles text input like normal.</li>
+          <li><b>How</b>: Call <code>register(path, {'{'} uncontrolled: true {'}'})</code>; the helper wires defaultValue/ref/handlers and reads the current value during <code>handleSubmit</code>. Async rules still run through <code>resolver</code>.</li>
         </ul>
       </section>
       <form onSubmit={handleSubmit((values) => alert('submit ' + JSON.stringify(values)))}>

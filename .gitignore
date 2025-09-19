@@ -12,7 +12,7 @@ index.d.ts
 index.js.map
 index.mjs.map
 esm/
-plugins/
+/plugins/
 hooks/
 utils/
 .smoke-tmp/
