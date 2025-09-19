@@ -38,6 +38,8 @@ body {
 }
 
 .panel { padding: 16px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; }
+.feature-list { padding-left: 1.2rem; margin: 0.4rem 0 0; display: grid; gap: 6px; }
+.feature-list li { color: var(--muted); }
 
 .scroll { overflow: auto; max-width: 100%; }
 
@@ -169,7 +171,14 @@ pre { background: #0b1220; color: #e2e8f0; padding: 10px; border-radius: 8px; ov
 .game2048 .muted { color: var(--muted); max-width: 420px; }
 .game2048 .scoreboard { display: flex; gap: 12px; align-items: center; }
 .game2048 .score { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; font-weight: 600; min-width: 110px; text-align: center; }
-.game2048 .board { position: relative; width: calc(var(--tile-size) * 4 + var(--tile-gap) * 5); height: calc(var(--tile-size) * 4 + var(--tile-gap) * 5); padding: var(--tile-gap); background: #bbada0; border-radius: 12px; margin: 0 auto; }
+.game2048 .board-frame { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto 1fr; gap: 4px 12px; width: fit-content; margin: 0 auto; align-items: center; }
+.game2048 .axis { font-weight: 600; color: var(--muted); text-align: center; font-size: 0.85rem; }
+.game2048 .axis-top { display: grid; grid-template-columns: repeat(4, var(--tile-size)); column-gap: var(--tile-gap); margin-left: calc(var(--tile-gap)); }
+.game2048 .axis-left { display: grid; grid-template-rows: repeat(4, var(--tile-size)); row-gap: var(--tile-gap); margin-top: calc(var(--tile-gap)); justify-items: center; }
+.game2048 .axis-left span { display: flex; align-items: center; justify-content: flex-end; width: 28px; padding-right: 4px; }
+.game2048 .axis-top span { display: flex; align-items: center; justify-content: center; height: var(--tile-size); }
+.game2048 .axis-corner { width: 28px; height: 20px; }
+.game2048 .board { position: relative; width: calc(var(--tile-size) * 4 + var(--tile-gap) * 5); height: calc(var(--tile-size) * 4 + var(--tile-gap) * 5); padding: var(--tile-gap); background: #bbada0; border-radius: 12px; }
 .game2048 .board-grid { position: absolute; inset: var(--tile-gap); display: grid; grid-template-columns: repeat(4, var(--tile-size)); grid-template-rows: repeat(4, var(--tile-size)); gap: var(--tile-gap); }
 .game2048 .grid-cell { background: rgba(238, 228, 218, 0.35); border-radius: 6px; }
 .game2048 .tile-layer { position: absolute; inset: var(--tile-gap); pointer-events: none; }

@@ -383,16 +383,39 @@ export default function Game2048() {
         </div>
       </header>
 
-      <section className="board">
-        <div className="board-grid">
-          {Array.from({ length: 16 }).map((_, idx) => (
-            <div key={idx} className="grid-cell" />
+      <section className="panel">
+        <h4>Why react-zustand-form fits 2048</h4>
+        <ul className="feature-list">
+          <li><strong>Structured grid state.</strong> Every tile lives at `rows.rX.cY`, so move logic just reads the board snapshot and pushes patches back through the kernel.</li>
+          <li><strong>Scoped subscriptions.</strong> Tiles subscribe at field level; rows and columns use memoised selectors. Only the cells that change re-render, which keeps the animation smooth.</li>
+          <li><strong>Action gate + indices.</strong> All mutations flow through `kernel.gate`, keeping the diff bus and column index in sync—handy for logging moves or bolting on undo/replay later.</li>
+          <li><strong>Ready to scale.</strong> The kernel can offload indexing to a worker or expose the diff stream if you want bots, analytics, or multiplayer.</li>
+        </ul>
+      </section>
+
+      <section className="board-frame">
+        <div className="axis-corner" aria-hidden="true" />
+        <div className="axis axis-top" aria-hidden="true">
+          {COL_KEYS.map((_, idx) => (
+            <span key={idx}>{idx + 1}</span>
           ))}
         </div>
-        <div className="tile-layer">
-          {tiles.map((tile) => (
-            <Tile key={tile.id} value={tile.value} row={tile.row} col={tile.col} />
+        <div className="axis axis-left" aria-hidden="true">
+          {ROW_KEYS.map((_, idx) => (
+            <span key={idx}>{idx + 1}</span>
           ))}
+        </div>
+        <div className="board">
+          <div className="board-grid">
+            {Array.from({ length: 16 }).map((_, idx) => (
+              <div key={idx} className="grid-cell" />
+            ))}
+          </div>
+          <div className="tile-layer">
+            {tiles.map((tile) => (
+              <Tile key={tile.id} value={tile.value} row={tile.row} col={tile.col} />
+            ))}
+          </div>
         </div>
       </section>
 
