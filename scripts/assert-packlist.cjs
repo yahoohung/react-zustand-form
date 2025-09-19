@@ -7,9 +7,10 @@ if (res.status !== 0) {
 }
 const out = JSON.parse(res.stdout);
 const files = (out[0] && out[0].files) ? out[0].files.map(f => f.path) : [];
+const normalized = files.map(p => p.replace(/^package\//, ''));
 const banned = [/^src\//, /^tests?\//, /^\.github\//, /^scripts\//, /^examples?\//, /^dist\//, /^\.smoke-tmp\//];
 
-const offenders = files.filter(p => banned.some(rx => rx.test(p)));
+const offenders = normalized.filter(p => banned.some(rx => rx.test(p)));
 if (offenders.length) {
   console.error('❌ Disallowed files included:\n' + offenders.map(s=>' - '+s).join('\n'));
   process.exit(1);
@@ -34,7 +35,7 @@ const required = [
   'dev.mjs',
   'dev.d.ts',
 ];
-const missing = required.filter(p => !files.includes(p));
+const missing = required.filter(p => !normalized.includes(p));
 if (missing.length) {
   console.error('❌ Missing expected build outputs in package:\n' + missing.map(s=>' - '+s).join('\n'));
   process.exit(1);
