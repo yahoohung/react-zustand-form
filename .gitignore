@@ -13,6 +13,8 @@ index.js.map
 index.mjs.map
 esm/
 plugins/
+hooks/
+utils/
 .smoke-tmp/
 
 # dependencies

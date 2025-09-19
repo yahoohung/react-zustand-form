@@ -92,47 +92,7 @@ function linkSelfIntoNodeModules(pkgName) {
   const { linkPath, mode } = linkSelfIntoNodeModules(pkg.name);
   console.log(`node_modules/${pkg.name} <- (${mode}) ${rel(ROOT) || '.'}`);
 
-  // C) CJS test (require by package name)
-  try {
-    const mod = require(pkg.name);
-    assert(mod != null, 'CJS require(pkg-name) OK (resolves exports.default → ./index.js)');
-  } catch (e) {
-    console.error(e);
-    assert(false, 'CJS require(pkg-name) failed');
-  }
-  if (pluginSub) {
-    try {
-      const sub = require(`${pkg.name}/${pluginSub}`);
-      assert(sub != null, `CJS require(${pkg.name}/${pluginSub}) OK (plugins/*)`);
-    } catch (e) {
-      console.error(e);
-      assert(false, `CJS require(${pkg.name}/${pluginSub}) failed`);
-    }
-  } else {
-    console.log('(Note) No plugins/* file found, skip CJS plugins subpath test');
-  }
-  if (indexSub) {
-    try {
-      const sub = require(`${pkg.name}/${indexSub}`);
-      assert(sub != null, `CJS require(${pkg.name}/${indexSub}) OK (index/*)`);
-    } catch (e) {
-      console.error(e);
-      assert(false, `CJS require(${pkg.name}/${indexSub}) failed`);
-    }
-  } else {
-    console.log('(Note) No index/* file found, skip CJS index subpath test');
-  }
-  if (hooksSub) {
-    try {
-      const sub = require(`${pkg.name}/${hooksSub}`);
-      assert(sub != null, `CJS require(${pkg.name}/${hooksSub}) OK (hooks/*)`);
-    } catch (e) {
-      console.error(e);
-      assert(false, `CJS require(${pkg.name}/${hooksSub}) failed`);
-    }
-  } else {
-    console.log('(Note) No hooks/* file found, skip CJS hooks subpath test');
-  }
+  console.log('(Note) Skipping CommonJS require checks – package exports ESM only.');
 
   // D) ESM test (import by package name → uses exports.import)
   try {

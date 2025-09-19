@@ -8,7 +8,10 @@ export default defineConfig({
     'src/plugins/**/*.ts',
     'src/plugins/**/*.tsx',
     'src/hooks/**/*.ts',
-    'src/hooks/**/*.tsx'    
+    'src/hooks/**/*.tsx',
+    // Additional public subpaths
+    'src/dev.ts',
+    'src/utils/**/*.ts'
   ],
   format: ['esm', 'cjs'],
   dts: true,

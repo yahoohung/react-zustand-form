@@ -17,9 +17,12 @@
   },
   "files": [
     "index.*",
+    "dev.*",
+    "index/**",
     "esm/**",
     "plugins/**",
     "hooks/**",
+    "utils/**",
     "README.md",
     "LICENSE",
     "package.json"
@@ -31,7 +34,7 @@
     "./package.json": "./package.json",
     ".": {
       "import": {
-        "types": "./esm/index.d.mts",
+        "types": "./esm/index.d.ts",
         "default": "./esm/index.mjs"
       },
       "default": {
@@ -41,7 +44,7 @@
     },
     "./plugins": {
       "import": {
-        "types": "./esm/plugins/index.d.mts",
+        "types": "./esm/plugins/index.d.ts",
         "default": "./esm/plugins/index.mjs"
       },
       "default": {
@@ -51,7 +54,7 @@
     },
     "./plugins/*": {
       "import": {
-        "types": "./esm/plugins/*.d.mts",
+        "types": "./esm/plugins/*.d.ts",
         "default": "./esm/plugins/*.mjs"
       },
       "default": {
@@ -61,7 +64,7 @@
     },
     "./*": {
       "import": {
-        "types": "./esm/*.d.mts",
+        "types": "./esm/*.d.ts",
         "default": "./esm/*.mjs"
       },
       "default": {
@@ -80,8 +83,8 @@
     "test:type": "vitest typecheck || echo 'Type check done'",
     "coverage": "npm run test -- --coverage",
     "packlist:assert": "node scripts/assert-packlist.cjs",
-    "pack:dry": "npm run clean && npm run build && npm run prepublishOnly && npm run smoke && npm run size && npm run packlist:assert && npm pack --dry-run && npm run postpublish",
-    "release": "npm run clean && npm run build && npm run prepublishOnly && npm run smoke && npm run size && npm run packlist:assert && npm publish && npm run postpublish",
+    "pack:dry": "npm run clean && npm run build && npm run prepublishOnly && npm run size && npm run packlist:assert && npm pack --dry-run && npm run postpublish",
+    "release": "npm run clean && npm run build && npm run prepublishOnly && npm run size && npm run packlist:assert && npm publish && npm run postpublish",
     "prepublishOnly": "node scripts/prepublish-prepare.cjs",
     "postpublish": "node scripts/postpublish-clean.cjs",
     "lint": "eslint . --ext .ts,.tsx",

@@ -14,4 +14,31 @@ if (offenders.length) {
   console.error('❌ Disallowed files included:\n' + offenders.map(s=>' - '+s).join('\n'));
   process.exit(1);
 }
-console.log('✅ Packlist check passed, no src/tests/.github/scripts/dist etc.');
+
+// Ensure expected built artifacts are present
+const required = [
+  // root entrypoints
+  'index.js',
+  'index.mjs',
+  'index.d.ts',
+  // esm mirrors
+  'esm/index.mjs',
+  'esm/index.d.ts',
+  // plugins entrypoints
+  'plugins/index.js',
+  'plugins/index.d.ts',
+  'esm/plugins/index.mjs',
+  'esm/plugins/index.d.ts',
+  // dev entry (optional but recommended)
+  'dev.js',
+  'dev.mjs',
+  'dev.d.ts',
+];
+const missing = required.filter(p => !files.includes(p));
+if (missing.length) {
+  console.error('❌ Missing expected build outputs in package:\n' + missing.map(s=>' - '+s).join('\n'));
+  process.exit(1);
+}
+
+
+console.log('✅ Packlist check passed; required outputs present.');

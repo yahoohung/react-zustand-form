@@ -21,9 +21,10 @@ function copyDirFilter(src, dest, filterFn) {
   }
 }
 
-// 1) Root-level index.*
+// 1) Root-level index.* and dev.*
 const createdFiles = [];
-['index.js', 'index.mjs', 'index.d.ts', 'index.js.map', 'index.mjs.map'].forEach(f => {
+['index.js', 'index.mjs', 'index.d.ts', 'index.js.map', 'index.mjs.map',
+ 'dev.js', 'dev.mjs', 'dev.d.ts', 'dev.js.map', 'dev.mjs.map'].forEach(f => {
   const from = path.join(DIST, f);
   if (fs.existsSync(from)) { copyFile(from, path.join(ROOT, f)); createdFiles.push(f); }
 });
@@ -58,6 +59,14 @@ const ROOT_INDEX = path.join(ROOT, 'index');
 if (fs.existsSync(DIST_INDEX)) {
   copyDirFilter(DIST_INDEX, ROOT_INDEX);
   createdDirs.push('index');
+}
+
+// 5) utils/** (copy entire dist/utils if present)
+const DIST_UTILS = path.join(DIST, 'utils');
+const ROOT_UTILS = path.join(ROOT, 'utils');
+if (fs.existsSync(DIST_UTILS)) {
+  copyDirFilter(DIST_UTILS, ROOT_UTILS);
+  createdDirs.push('utils');
 }
 
 // Record files and dirs created at project root
