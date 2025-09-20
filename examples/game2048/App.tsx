@@ -270,7 +270,7 @@ const ColumnSummary: React.FC<{ kernel: ReturnType<typeof createFormKernel>; col
   }
 );
 
-export default function Game2048() {
+export default function Game2048({ compact = false }: { compact?: boolean } = {}) {
   const nextIdRef = React.useRef(0);
   const makeTile = React.useCallback((value: number) => ({ id: `tile-${nextIdRef.current++}`, value }), []);
 
@@ -288,6 +288,7 @@ export default function Game2048() {
   const [score, setScore] = React.useState(0);
   const [best, setBest] = React.useState(0);
   const [status, setStatus] = React.useState<'playing' | 'won' | 'lost'>('playing');
+  const touchStartRef = React.useRef<{ x: number; y: number } | null>(null);
 
   const applyBoard = React.useCallback(
     (next: Board) => {
@@ -325,6 +326,59 @@ export default function Game2048() {
     },
     [applyBoard, kernel, makeTile, status]
   );
+
+  const handleTouchStart = React.useCallback<React.TouchEventHandler<HTMLDivElement>>((event) => {
+    if (event.touches.length !== 1) {
+      touchStartRef.current = null;
+      return;
+    }
+    const touch = event.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  }, []);
+
+  const handleTouchMove = React.useCallback<React.TouchEventHandler<HTMLDivElement>>((event) => {
+    const start = touchStartRef.current;
+    if (!start || event.touches.length !== 1) return;
+
+    const touch = event.touches[0];
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) > 10) {
+      event.preventDefault();
+    }
+  }, []);
+
+  const handleTouchEnd = React.useCallback<React.TouchEventHandler<HTMLDivElement>>(
+    (event) => {
+      const start = touchStartRef.current;
+      if (!start) return;
+
+      touchStartRef.current = null;
+      if (event.changedTouches.length === 0) return;
+      const touch = event.changedTouches[0];
+      const dx = touch.clientX - start.x;
+      const dy = touch.clientY - start.y;
+
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+      const threshold = 24;
+      if (Math.max(absX, absY) < threshold) return;
+
+      let direction: Direction | null = null;
+      if (absX > absY) {
+        direction = dx > 0 ? 'right' : 'left';
+      } else {
+        direction = dy > 0 ? 'down' : 'up';
+      }
+
+      if (direction) handleMove(direction);
+    },
+    [handleMove]
+  );
+
+  const handleTouchCancel = React.useCallback(() => {
+    touchStartRef.current = null;
+  }, []);
 
   React.useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -367,14 +421,103 @@ export default function Game2048() {
     [rowsState]
   );
 
+  if (compact) {
+    const rowSnapshot = ROW_KEYS.map((rk, idx) => {
+      const sum = COL_KEYS.reduce((acc, ck) => acc + (rowsState[rk][ck]?.value ?? 0), 0);
+      return `R${idx + 1}: ${sum || '–'}`;
+    });
+    const colSnapshot = COL_KEYS.map((ck, idx) => {
+      const sum = ROW_KEYS.reduce((acc, rk) => acc + (rowsState[rk][ck]?.value ?? 0), 0);
+      return `C${idx + 1}: ${sum || '–'}`;
+    });
+
+    return (
+      <div className="game2048 compact">
+        <div className="compact-body">
+          <section className="board-frame">
+            <div className="axis-corner" aria-hidden="true" />
+            <div className="axis axis-top" aria-hidden="true">
+              {COL_KEYS.map((_, idx) => (
+                <span key={idx}>{idx + 1}</span>
+              ))}
+            </div>
+            <div className="axis axis-left" aria-hidden="true">
+              {ROW_KEYS.map((_, idx) => (
+                <span key={idx}>{idx + 1}</span>
+              ))}
+            </div>
+            <div
+              className="board"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onTouchCancel={handleTouchCancel}
+            >
+              <div className="board-grid">
+                {Array.from({ length: 16 }).map((_, idx) => (
+                  <div key={idx} className="grid-cell" />
+                ))}
+              </div>
+              <div className="tile-layer">
+                {tiles.map((tile) => (
+                  <Tile key={tile.id} value={tile.value} row={tile.row} col={tile.col} />
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <aside className="compact-sidebar">
+            <div className="mini-stats">
+              <div>
+                <span>Score</span>
+                <strong>{score}</strong>
+              </div>
+              <div>
+                <span>Best</span>
+                <strong>{best}</strong>
+              </div>
+            </div>
+            <div className="mini-console">
+              <div>
+                <span>Rows</span>
+                <code>{rowSnapshot.join('\n')}</code>
+              </div>
+              <div>
+                <span>Cols</span>
+                <code>{colSnapshot.join('\n')}</code>
+              </div>
+            </div>
+            {status !== 'playing' && (
+              <div className={`mini-status ${status}`}>
+                {status === 'won' ? '🎉 2048 reached' : 'No moves left'}
+              </div>
+            )}
+            <div className="mini-controls" aria-label="2048 controls">
+              <span className="mini-hint">Swipe or use arrows</span>
+              <button type="button" onClick={() => handleMove('up')} aria-label="Move up">↑</button>
+              <div className="mini-controls-row">
+                <button type="button" onClick={() => handleMove('left')} aria-label="Move left">←</button>
+                <button type="button" className="mini-reset" onClick={reset}>↺</button>
+
+                <button type="button" onClick={() => handleMove('right')} aria-label="Move right">→</button>
+              </div>
+              <button type="button" onClick={() => handleMove('down')} aria-label="Move down">↓</button>
+
+            </div>
+          </aside>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="game2048">
       <header>
         <div>
           <h3>2048 (row & column watchers)</h3>
           <p className="muted">
-            Use the arrow keys or buttons to slide tiles. Row and column summaries subscribe to the
-            kernel with memoised selectors.
+            Swipe, press the arrow keys, or tap the buttons to slide tiles. Row and column summaries
+            subscribe to the kernel with memoised selectors.
           </p>
         </div>
         <div className="scoreboard">
@@ -405,7 +548,13 @@ export default function Game2048() {
             <span key={idx}>{idx + 1}</span>
           ))}
         </div>
-        <div className="board">
+        <div
+          className="board"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchCancel}
+        >
           <div className="board-grid">
             {Array.from({ length: 16 }).map((_, idx) => (
               <div key={idx} className="grid-cell" />
