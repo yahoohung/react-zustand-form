@@ -1,5 +1,5 @@
 import React from 'react';
-// In your app use: import { useForm } from 'react-zustand-form'
+// In your app use: import { useForm } from 'rezend-form'
 import { useForm } from '../../../src';
 
 type Values = { name: string; email: string };

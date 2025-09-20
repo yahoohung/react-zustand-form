@@ -92,7 +92,7 @@ const demos = [
   },
   {
     id: 'mega',
-    title: 'react-zustand-form 10k',
+    title: 'rezend-form 10k',
     blurb: '10,000 input stress test with dirty tracking and server merges.',
     component: Mega,
     tags: ['performance'],
@@ -154,16 +154,16 @@ function useRemoteBadge(url: string, fallback: string) {
 
 function HeroBadges() {
   const downloads = useRemoteBadge(
-    'https://api.npmjs.org/downloads/point/last-week/react-zustand-form',
+    'https://api.npmjs.org/downloads/point/last-week/rezend-form',
     '—'
   );
-  const stars = useRemoteBadge('https://api.github.com/repos/yahoohung/react-zustand-form', '—');
+  const stars = useRemoteBadge('https://api.github.com/repos/yahoohung/rezend-form', '—');
 
   return (
     <div className="hero-badges">
       <a
         className="hero-badge"
-        href="https://www.npmjs.com/package/react-zustand-form"
+        href="https://www.npmjs.com/package/rezend-form"
         target="_blank"
         rel="noreferrer"
       >
@@ -172,7 +172,7 @@ function HeroBadges() {
       </a>
       <a
         className="hero-badge"
-        href="https://github.com/yahoohung/react-zustand-form"
+        href="https://github.com/yahoohung/rezend-form"
         target="_blank"
         rel="noreferrer"
       >
@@ -181,7 +181,7 @@ function HeroBadges() {
       </a>
       <a
         className="hero-badge"
-        href="https://github.com/yahoohung/react-zustand-form"
+        href="https://github.com/yahoohung/rezend-form"
         target="_blank"
         rel="noreferrer"
       >
@@ -223,7 +223,7 @@ function FeatureHighlights() {
   return (
     <section className="section" id="highlights">
       <div className="section-header">
-        <h2>Why developers pick react-zustand-form</h2>
+        <h2>Why developers pick rezend-form</h2>
         <p>Architected for React 18/19 concurrent apps that need ultra-fast state updates.</p>
       </div>
       <div className="feature-grid">
@@ -262,7 +262,7 @@ function ExamplesGallery({ onSelect }: { onSelect: (id: DemoId) => void }) {
             <p>{demo.blurb}</p>
             <footer>
               <button type="button" onClick={() => onSelect(demo.id)}>Open in playground</button>
-              <a href={`https://github.com/yahoohung/react-zustand-form/tree/main/examples/${demo.source ?? demo.id}`}>Source ↗</a>
+              <a href={`https://github.com/yahoohung/rezend-form/tree/main/examples/${demo.source ?? demo.id}`}>Source ↗</a>
             </footer>
           </article>
         ))}
@@ -275,9 +275,9 @@ function PerformanceShowcase({ onSelect }: { onSelect: (id: DemoId) => void }) {
   return (
     <section className="section" id="battle">
       <div className="section-header">
-        <h2>Performance battle: react-zustand-form vs others</h2>
+        <h2>Performance battle: rezend-form vs others</h2>
         <p>
-          Slide between the 10k-field stress tests powered by react-zustand-form, react-hook-form, and
+          Slide between the 10k-field stress tests powered by rezend-form, react-hook-form, and
           Formik. Even on low-specced devices you can feel how the kernel keeps typing and scrolling
           fluid while the baselines noticeably hitch.
         </p>
@@ -298,9 +298,9 @@ function GettingStarted() {
       </div>
       <div className="card" style={{ overflowX: 'auto' }}>
         <pre>
-          <code>{`pnpm add react-zustand-form zustand
+          <code>{`pnpm add rezend-form
 
-import { createFormKernel } from 'react-zustand-form';
+import { createFormKernel } from 'rezend-form';
 
 const kernel = createFormKernel({
   r1: { c1: 'Ada', c2: 'ada@example.com' }
@@ -330,7 +330,7 @@ function ApiGuide() {
     },
     {
       title: 'Plugins',
-      detail: 'Drop-in helpers like backend sync, DOM reset sync, and more via `react-zustand-form/plugins`.',
+      detail: 'Drop-in helpers like backend sync, DOM reset sync, and more via `rezend-form/plugins`.',
     },
     {
       title: 'Diff bus & version map',
@@ -353,10 +353,10 @@ function ApiGuide() {
         ))}
       </div>
       <div className="cta-row">
-        <a className="cta" href="https://github.com/yahoohung/react-zustand-form#readme" target="_blank" rel="noreferrer">
+        <a className="cta" href="https://github.com/yahoohung/rezend-form#readme" target="_blank" rel="noreferrer">
           Read full documentation ↗
         </a>
-        <a className="cta ghost" href="https://codesandbox.io/p/sandbox/react-zustand-form-starter" target="_blank" rel="noreferrer">
+        <a className="cta ghost" href="https://codesandbox.io/p/sandbox/rezend-form-starter" target="_blank" rel="noreferrer">
           Try the starter sandbox ↗
         </a>
       </div>
@@ -445,14 +445,14 @@ function App() {
   return (
     <div className="app-shell">
       <nav className="site-nav">
-        <a href="#top" className="logo">react-zustand-form</a>
+        <a href="#top" className="logo">rezend-form</a>
         <div className="nav-links">
           <a href="#examples">Examples</a>
           <a href="#battle">Performance</a>
           <a href="#playground">Playground</a>
           <a href="#getting-started">Getting started</a>
           <a href="#api">API</a>
-          <a href="https://github.com/yahoohung/react-zustand-form" target="_blank" rel="noreferrer">GitHub</a>
+          <a href="https://github.com/yahoohung/rezend-form" target="_blank" rel="noreferrer">GitHub</a>
         </div>
       </nav>
 
@@ -494,16 +494,16 @@ function App() {
 
       <footer className="site-footer">
         <div>
-          <strong>react-zustand-form</strong>
+          <strong>rezend-form</strong>
           <p>Tiny, concurrent-safe state for ambitious React applications.</p>
         </div>
         <div className="footer-links">
-          <a href="https://github.com/yahoohung/react-zustand-form" target="_blank" rel="noreferrer">GitHub</a>
-          <a href="https://www.npmjs.com/package/react-zustand-form" target="_blank" rel="noreferrer">npm</a>
-          <a href="https://github.com/yahoohung/react-zustand-form/blob/main/CHANGELOG.md" target="_blank" rel="noreferrer">Changelog</a>
-          <a href="https://twitter.com/share?text=Check%20out%20react-zustand-form&url=https://github.com/yahoohung/react-zustand-form" target="_blank" rel="noreferrer">Share</a>
+          <a href="https://github.com/yahoohung/rezend-form" target="_blank" rel="noreferrer">GitHub</a>
+          <a href="https://www.npmjs.com/package/rezend-form" target="_blank" rel="noreferrer">npm</a>
+          <a href="https://github.com/yahoohung/rezend-form/blob/main/CHANGELOG.md" target="_blank" rel="noreferrer">Changelog</a>
+          <a href="https://twitter.com/share?text=Check%20out%20rezend-form&url=https://github.com/yahoohung/rezend-form" target="_blank" rel="noreferrer">Share</a>
         </div>
-        <span className="footer-meta">MIT © {new Date().getFullYear()} react-zustand-form</span>
+        <span className="footer-meta">MIT © {new Date().getFullYear()} rezend-form</span>
       </footer>
     </div>
   );

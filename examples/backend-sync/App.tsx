@@ -1,5 +1,5 @@
 import React from 'react';
-// In your app, import from 'react-zustand-form' and 'react-zustand-form/plugins'
+// In your app, import from 'rezend-form' and 'rezend-form/plugins'
 import { createFormKernel } from '../../src';
 import { createBackendSync } from '../../src/plugins';
 

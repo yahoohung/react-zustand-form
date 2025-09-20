@@ -1,5 +1,5 @@
 import React from 'react';
-// In your app: import { useForm } from 'react-zustand-form'
+// In your app: import { useForm } from 'rezend-form'
 import { useForm } from '../../src';
 import { z } from 'zod';
 import Ajv from 'ajv';

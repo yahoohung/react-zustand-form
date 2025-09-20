@@ -1,5 +1,5 @@
 import React from 'react';
-// In your app use: import { createFormKernel } from 'react-zustand-form'
+// In your app use: import { createFormKernel } from 'rezend-form'
 import { createFormKernel } from '../../../src';
 import { makeFieldSelector } from '../../../src/core/path-selectors';
 import Fps from '../../src/Fps';

@@ -1,11 +1,11 @@
-# react-zustand-form
+# rezend-form
 
-> **Concurrent-safe form state for React 18/19, powered by Zustand selectors.**
+> **Concurrent-safe form state for React 18/19, powered by a sweet-state inspired store.**
 > **Works as uncontrolled or controlled. Handles fast server updates. Field meta without extra renders.**
 
 ---
 
-## Why use react-zustand-form?
+## Why use rezend-form?
 
 We like how React works and think react-hook-form (RHF) is great for most forms. But sometimes we need more:
 
@@ -23,8 +23,8 @@ So we built **RZF** to keep React rendering simple and let the store do the work
 
 * **User-first uncontrolled**: register fields as uncontrolled; we only track `dirty` and `touched`, and read values from the DOM on submit.
 * **Sync helpers**: DOM reset (`createDomResetSync`) and headless backend (`createBackendSync`) merges that respect keep-dirty policies.
-* **Concurrent-safe**: built on Zustand v5 (`useSyncExternalStore` inside); can use `startTransition` if you want.
-* **Fine subscriptions**: `subscribeWithSelector` only updates what you need.
+* **Concurrent-safe**: built on a react-sweet-state inspired store (pure `useSyncExternalStore` under the hood); can use `startTransition` if you want.
+* **Fine subscriptions**: selector-first `useStore` hook with per-listener equality checks.
 * **Safe path tools**: strong `parsePath`, `getAtPath`, `setAtPath` with protection against prototype pollution.
 * **Typed, small, testable**: TypeScript first; functional core; no top-level side effects.
 
@@ -33,8 +33,8 @@ So we built **RZF** to keep React rendering simple and let the store do the work
 ## Install
 
 ```bash
-npm i react-zustand-form zustand
-# peer dependencies: react ^18.2 or ^19, zustand ^5
+npm i rezend-form
+# peer dependencies: react ^18.2 or ^19
 ```
 
 ---
@@ -64,7 +64,7 @@ What each demo shows
 - `backend-sync`: batching/coalescing/retry of diffs; apply server patches with a keep-dirty policy.
 - `validation`: shows `resolver` wired to Zod or AJV.
 - `perf`: big grid (e.g. 100×50 = 5k fields) where only edited cells re-render; includes a simple FPS meter.
-- `mega` / library comparisons: 10k-grid stress tests using react-zustand-form (kernel), react-hook-form, react-sweet-state, and Formik.
+- `mega` / library comparisons: 10k-grid stress tests using rezend-form (kernel), react-hook-form, react-sweet-state, and Formik.
 
 ---
 
@@ -73,7 +73,7 @@ What each demo shows
 ### 1) Uncontrolled (user-first)
 
 ```tsx
-import { useForm } from 'react-zustand-form';
+import { useForm } from 'rezend-form';
 
 type Values = { name: string };
 
@@ -132,7 +132,7 @@ const { Provider, register } = useForm<Values>({
 ### 4) DOM reset sync (client-only plugin)
 
 ```tsx
-import { createDomResetSync } from 'react-zustand-form/plugins';
+import { createDomResetSync } from 'rezend-form/plugins';
 
 const { Provider, register, store } = useForm<Values>({ defaultValues: { name: '' } });
 
@@ -159,7 +159,7 @@ Below is the high‑level API surface with brief examples. Refer to source files
 Creates the “killer feature” data kernel for large forms and table‑like data. It returns a small, consistent surface so field/row/column updates stay atomic and fast.
 
 - Returns: `{ useStore, gate, diffBus, versionMap, indexStore }`
-- `useStore`: Zustand store with `{ rows }`
+- `useStore`: sweet-state style store with `{ rows }`
 - `gate`: ActionGate with atomic operations below
 - `diffBus`: batched diff events for subscribers
 - `versionMap`: per‑column version counters for tiered subscriptions
@@ -174,7 +174,7 @@ Options (subset):
 Example (60 seconds):
 
 ```ts
-import { createFormKernel } from 'react-zustand-form';
+import { createFormKernel } from 'rezend-form';
 
 const initial = {
   u1: { firstName: 'Ada', lastName: 'Lovelace', email: 'ada@example.com', score: 42 },
@@ -279,8 +279,8 @@ import * as React from 'react';
 import {
   useForm,
   getAtPath, // path tools
-} from 'react-zustand-form';
-import { createDomResetSync } from 'react-zustand-form/plugins';
+} from 'rezend-form';
+import { createDomResetSync } from 'rezend-form/plugins';
 
 type Values = {
   name: string;
@@ -401,7 +401,7 @@ export function LiveProfile() {
 | --------------- | ------------------------------------------------------------------------ | -------: | ------------------------------------------------------------------------------ |
 | `name`          | `string`                                                                 |          | store name for DevTools                                                        |
 | `defaultValues` | `T`                                                                      |        ✅ | initial values; used for uncontrolled and controlled fields                    |
-| `devtools`      | `boolean`                                                                |          | use Zustand DevTools in development                                            |
+| `devtools`      | `boolean`                                                                |          | use Redux DevTools in development                                              |
 | `resolver`      | `(values: T) => Promise<{errors?: FormErrors}> \| {errors?: FormErrors}` |          | async-friendly, cancels old calls                                              |
 
 **Returns**
@@ -425,7 +425,7 @@ export function LiveProfile() {
 > **Quoted keys are not supported yet.** We block dangerous keys (`__proto__`, `constructor`, `prototype`) to prevent prototype pollution.
 
 ```ts
-import { parsePath, getAtPath, setAtPath } from 'react-zustand-form';
+import { parsePath, getAtPath, setAtPath } from 'rezend-form';
 
 parsePath('a.b[0].c');           // ['a','b',0,'c']
 getAtPath({ a: { b: [1] } }, 'a.b[0]'); // 1
@@ -437,7 +437,7 @@ setAtPath({}, 'foo[0].bar', 7);  // { foo: [{ bar: 7 }] } (immutable)
 ### DOM reset sync plugin (exported)
 
 ```ts
-import { createDomResetSync, type ResetPolicy } from 'react-zustand-form/plugins';
+import { createDomResetSync, type ResetPolicy } from 'rezend-form/plugins';
 
 const resetSync = createDomResetSync(store, {
   coalesceMs: 16,
@@ -455,8 +455,8 @@ resetSync.dispose();
 ### Backend sync engine (exported)
 
 ```ts
-import { createFormKernel } from 'react-zustand-form';
-import { createBackendSync } from 'react-zustand-form/plugins';
+import { createFormKernel } from 'rezend-form';
+import { createBackendSync } from 'rezend-form/plugins';
 
 const initialRows = {
   u1: { name: 'Ada', email: 'ada@example.com', score: 42 },
@@ -507,7 +507,7 @@ Most apps do not need this. `useForm` wraps it for you.
 
 ## Why not React Context?
 
-React Context is great for settings and low-frequency updates, but **every change in Provider value can cause re-renders**. For fast form updates and server patches, this is not efficient. Zustand gives:
+React Context is great for settings and low-frequency updates, but **every change in Provider value can cause re-renders**. For fast form updates and server patches, this is not efficient. Our sweet-state inspired store gives:
 
 * **Plain store** you can use outside React
 * **Selector-based subscriptions** with equality checks
@@ -621,6 +621,6 @@ MIT
 
 * 🚦 Uncontrolled (user-first) or controlled — you choose for each field
 * ⚡ Merges server updates; only changes the DOM when safe
-* 🧩 Zustand-powered store with fine selectors
+* 🧩 Sweet-store powered selectors with fine-grained equality checks
 * 🛡️ Safe path tools and async-safe resolver
 * 🧪 Easy to test; PRs welcome

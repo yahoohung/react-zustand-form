@@ -1,89 +1,108 @@
-import { create } from 'zustand';
-import { subscribeWithSelector } from 'zustand/middleware';
+import { createSweetStore } from '../core/sweet-store';
 import { createDiffBus } from '../core/diff-bus';
 import { createVersionMap } from '../core/version-map';
 import { createIndexStore, type IndexStoreOptions } from '../index/column-index-store';
-import { createIndexStoreWorker } from '../index/index-store.worker';
 import { createActionGate } from '../core/action-gate';
-import { withIndexGuard } from '../core/with-index-guard';
-
-type Rows = Record<string, Record<string, unknown>>;
-
-export interface FormState { rows: Rows; }
+import { createKernelEngine } from '../kernel/engine';
+import type { KernelCommit, KernelRows } from '../kernel/types';
+import { createFlushScheduler, type FlushStrategy } from '../kernel/scheduler';
 
 export interface KernelOptions {
   index?: IndexStoreOptions;
-  offloadToWorker?: boolean; // default false
-  guardInDev?: boolean;      // default true
+  guardInDev?: boolean;
+  devtools?: boolean;
+  name?: string;
+  /** Frame flush strategy: `raf` (default), `microtask`, or `immediate`. */
+  flushStrategy?: FlushStrategy;
 }
 
-export function createFormKernel(initialRows: Rows, options: KernelOptions = {}) {
-  const { index, offloadToWorker = false, guardInDev = true } = options;
+export interface FormState { rows: KernelRows; }
 
-  const useStore = create<FormState>()(subscribeWithSelector((set) => ({ rows: initialRows })));
+function cloneInitialRows(rows: KernelRows): KernelRows {
+  const next: KernelRows = {};
+  Object.keys(rows ?? {}).forEach((rowKey) => {
+    next[rowKey] = { ...(rows[rowKey] ?? {}) };
+  });
+  return next;
+}
 
-  // DEV ONLY: detect direct setState calls that bypass ActionGate (which would desync index/version/diff).
-  if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production' && guardInDev !== false) {
-    const originalSetState = useStore.setState as unknown as (p: Partial<FormState>, replace?: boolean, actionName?: string) => void;
-    (useStore.setState as any) = (p: Partial<FormState>, replace?: boolean, actionName?: string) => {
-      const label = actionName ?? '';
-      const fromGate = typeof label === 'string' && (label.startsWith('gate:') || label.startsWith('kernel/'));
-      if (!fromGate) {
-        // Point to the logical owner by printing a short stack.
-        const err = new Error('[RZF] Direct useStore.setState() detected. Route mutations via ActionGate to keep index/version/diff consistent.');
-        // eslint-disable-next-line no-console
-        console.warn(err.stack || err.message);
-      }
-      try {
-        return originalSetState(p as any, replace as any, actionName);
-      } catch {
-        return originalSetState(p as any, replace as any);
+export function createFormKernel(initialRows: KernelRows, options: KernelOptions = {}) {
+  const {
+    index: indexOptions,
+    guardInDev = true,
+    devtools = false,
+    name = 'kernel',
+    flushStrategy = 'raf',
+  } = options;
+
+  const store = createSweetStore<FormState>({ rows: cloneInitialRows(initialRows) }, { name, devtools });
+ const diffBus = createDiffBus('animationFrame');
+ const versionMap = createVersionMap();
+ const indexStore = createIndexStore(indexOptions);
+  indexStore.rebuildFromRows(store.getState().rows);
+
+  let lastCommitLabel = 'kernel/init';
+
+  const flush = (() => {
+    let scheduled = false;
+    let pending: KernelCommit | null = null;
+    const trigger = createFlushScheduler(flushStrategy, () => {
+      scheduled = false;
+      if (!pending) return;
+      const commit = pending;
+      pending = null;
+      lastCommitLabel = commit.label;
+      store.setState(() => ({ rows: commit.rows }), true, { type: commit.label });
+      diffBus.publish(commit.diffs);
+    });
+
+    return (commit: KernelCommit) => {
+      pending = pending
+        ? {
+            rows: commit.rows,
+            diffs: [...pending.diffs, ...commit.diffs],
+            label: commit.label,
+            actionCount: pending.actionCount + commit.actionCount,
+          }
+        : commit;
+      if (!scheduled) {
+        scheduled = true;
+        trigger();
       }
     };
+  })();
+
+  const engine = createKernelEngine(
+    {
+      initialRows: store.getState().rows,
+      indexStore,
+      versionMap,
+      sourceLabel: name,
+    },
+    flush,
+  );
+
+  const gate = createActionGate(engine);
+
+  if (!guardInDev || process.env.NODE_ENV === 'production') {
+    return { useStore: store.useStore, diffBus, versionMap, indexStore, gate };
   }
 
-  const diffBus = createDiffBus('animationFrame');
-  const versionMap = createVersionMap();
-
-  const indexStore = offloadToWorker
-    ? createIndexStoreWorker(index)
-    : createIndexStore(index);
-  // IMPORTANT: After init, all row mutations must flow through ActionGate to keep index/version/diffs in sync.
-  // Avoid calling useStore.setState(...) directly for rows; the DEV patch above will warn if that happens.
-  indexStore.rebuildFromRows(initialRows);
-
-  // Adapt setState to the ActionGate expected signature (always replace=false for partial updates)
-  const setStateSafe: (partial: Partial<FormState>, replace?: boolean, actionName?: string) => void = (partial, _replace, actionName) => {
-    // We intentionally force replace=false because ActionGate always sends partial updates
-    const setStateImpl = useStore.setState as unknown as (p: Partial<FormState>, replace?: boolean, actionName?: string) => void;
-
-    // Forward action names if the store is enhanced by devtools middleware (it reads the 3rd arg).
-    // Fallback to a default action label to keep traces meaningful.
-    const label = actionName ?? 'gate:set';
-
-    // Record last action name for quick debugging (safe no-op in production)
-    try { (globalThis as any).__RZF_LAST_ACTION__ = label; } catch {}
-
-    // Some Zustand setups won't accept a 3rd arg; call signature-tolerant.
-    try {
-      setStateImpl(partial as any, false, label);
-    } catch {
-      setStateImpl(partial as any, false);
+  const wrappedGate = new Proxy(gate, {
+    get(target, key) {
+      const original = (target as any)[key];
+      if (typeof original !== 'function') return original;
+      return (...args: unknown[]) => {
+        const label = typeof key === 'string' ? `gate:${key}` : 'gate:call';
+        try {
+          (globalThis as any).__RZF_LAST_ACTION__ = label;
+        } catch {
+          // no-op
+        }
+        return original(...args);
+      };
     }
-  };
+  }) as typeof gate;
 
-  let gate = createActionGate<FormState>({
-    getState: useStore.getState,
-    setState: setStateSafe,
-    diffBus,
-    versionMap,
-    indexStore
-  });
-
-  // Only attach heavy guards in development. In production, skip for performance.
-  if (guardInDev !== false && typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production') {
-    gate = withIndexGuard(gate, useStore.getState, indexStore);
-  }
-
-  return { useStore, diffBus, versionMap, indexStore, gate };
+  return { useStore: store.useStore, diffBus, versionMap, indexStore, gate: wrappedGate };
 }

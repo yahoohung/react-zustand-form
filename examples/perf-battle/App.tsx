@@ -17,7 +17,7 @@ export default function PerfBattle({ onSelect }: { onSelect?: (id: string) => vo
   const metrics: Array<{ id: string; label: string; tag: string; score: number; pitch: string; description: string }> = [
     {
       id: 'mega',
-      label: 'react-zustand-form • 10k grid',
+      label: 'rezend-form • 10k grid',
       tag: 'kernel',
       score: 1,
       pitch: 'Stays silky smooth',
@@ -63,7 +63,7 @@ export default function PerfBattle({ onSelect }: { onSelect?: (id: string) => vo
       <section style={{ marginBottom: 12 }}>
         <h3 style={{ margin: '0 0 6px' }}>Performance comparison — identical logic</h3>
         <ul style={{ margin: 0, paddingLeft: 18 }}>
-          <li><b>Scope</b>: Four 10k-field demos with identical requirements—react-zustand-form (kernel), react-hook-form, react-sweet-state, and Formik.</li>
+          <li><b>Scope</b>: Four 10k-field demos with identical requirements—rezend-form (kernel), react-hook-form, react-sweet-state, and Formik.</li>
           <li><b>Rules</b>: dirty = red border, changes pulse yellow, validation accepts 0–9999, random server updates land every second, blur logs the value.</li>
           <li><b>How to use</b>: Jump to a tab, tweak grid size and update rate, and watch both the live FPS counter and the trailing chart.</li>
         </ul>

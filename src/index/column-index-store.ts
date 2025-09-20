@@ -34,7 +34,8 @@ export function createIndexStore(opts: IndexStoreOptions = {}): IndexStore {
   const whitelist = opts.whitelistColumns ? new Set(opts.whitelistColumns) : null;
   const allowColumn = (col: string) => (whitelist ? whitelist.has(col) : true);
 
-  const maxColumns = opts.lru?.maxColumns ?? 1000;
+  const rawMaxColumns = opts.lru?.maxColumns ?? 1000;
+  const maxColumns = rawMaxColumns <= 0 ? 1 : rawMaxColumns;
   let columnCount = 0;
 
   const emptyView: ColumnIndex = { byRow: Object.freeze({}) };
@@ -77,19 +78,23 @@ export function createIndexStore(opts: IndexStoreOptions = {}): IndexStore {
     }
   };
 
-  const ensureColumn = (col: string): ColumnEntry | null => {
+  const touchColumn = (col: string, entry: ColumnEntry) => {
+    columns.delete(col);
+    columns.set(col, entry);
+    return entry;
+  };
+
+  const ensureColumn = (col: string, createIfMissing = true): ColumnEntry | null => {
     if (!allowColumn(col)) return null;
-    let entry = columns.get(col);
-    if (entry) {
-      // Refresh insertion order to approximate LRU behaviour.
-      columns.delete(col);
-      columns.set(col, entry);
-      return entry;
+    const existing = columns.get(col);
+    if (existing) {
+      return touchColumn(col, existing);
     }
+    if (!createIfMissing) return null;
 
     const map = new Map<string, unknown>();
     const view: ColumnIndex = { byRow: Object.create(null) };
-    entry = { map, view };
+    const entry: ColumnEntry = { map, view };
     columns.set(col, entry);
     columnCount += 1;
     maybePrune();
@@ -97,7 +102,7 @@ export function createIndexStore(opts: IndexStoreOptions = {}): IndexStore {
   };
 
   const getColumn = (col: string): ColumnIndex => {
-    const entry = ensureColumn(col);
+    const entry = ensureColumn(col, opts.lazy === false);
     return entry ? entry.view : emptyView;
   };
 

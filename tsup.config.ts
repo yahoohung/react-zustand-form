@@ -61,7 +61,7 @@ export default defineConfig({
   target: 'es2019',
   treeshake: true,
   minify: true,
-  external: ['react', 'react-dom', 'zustand'], // don’t bundle peers
+  external: ['react', 'react-dom'], // don’t bundle peers
   outDir: 'dist',
   outExtension: ({ format }) => ({
     js: format === 'esm' ? '.mjs' : '.js',

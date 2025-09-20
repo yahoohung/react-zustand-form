@@ -527,7 +527,7 @@ export default function Game2048({ compact = false }: { compact?: boolean } = {}
       </header>
 
       <section className="panel">
-        <h4>Why react-zustand-form fits 2048</h4>
+        <h4>Why rezend-form fits 2048</h4>
         <ul className="feature-list">
           <li><strong>Structured grid state.</strong> Every tile lives at `rows.rX.cY`, so move logic just reads the board snapshot and pushes patches back through the kernel.</li>
           <li><strong>Scoped subscriptions.</strong> Tiles subscribe at field level; rows and columns use memoised selectors. Only the cells that change re-render, which keeps the animation smooth.</li>

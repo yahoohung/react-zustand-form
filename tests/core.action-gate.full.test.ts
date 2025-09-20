@@ -29,6 +29,8 @@ function makeDeps() {
         bumps.push([col, rowKey ?? '']);
       },
       ensureColumn: () => { /* no-op */ },
+      dropRow: () => { /* no-op */ },
+      renameRow: () => { /* no-op */ },
       get: () => ({ version: 0 }),
       snapshot: () => ({}),
       reset: () => { /* no-op */ },

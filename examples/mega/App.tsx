@@ -187,7 +187,7 @@ export default function MegaGrid() {
 
   return (
     <div>
-      <PerfDescription libLabel={<span><code>react-zustand-form</code> (kernel)</span>} />
+      <PerfDescription libLabel={<span><code>rezend-form</code> (kernel)</span>} />
 
       <div className="panel" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
         <div>

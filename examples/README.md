@@ -1,6 +1,6 @@
 # Examples playground
 
-This directory hosts the demo app that lives at `/examples`. Each screen highlights a different slice of `react-zustand-form`, so you can copy patterns straight into your project.
+This directory hosts the demo app that lives at `/examples`. Each screen highlights a different slice of `rezend-form`, so you can copy patterns straight into your project.
 
 ## Try it locally
 
@@ -45,7 +45,7 @@ Switch demos by changing the hash part of the URL (`/#demo-name`). The navigatio
 
 ## Import paths
 
-- When you consume the library from npm: `import { useForm } from 'react-zustand-form'`.
+- When you consume the library from npm: `import { useForm } from 'rezend-form'`.
 - When developing inside this repo, the examples import from `../../src` so you see changes instantly.
 
 ## Project layout

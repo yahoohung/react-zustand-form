@@ -1,16 +1,14 @@
+// ------------------------------------------------------------
+// Portions adapted from react-sweet-state (MIT License)
+// ------------------------------------------------------------
 /**
  * Form store factory and micro-batcher.
  *
- * The store is a vanilla Zustand instance (no React import).
+ * The store is a vanilla Sweet-Store instance (no React import at call sites).
  * The batcher coalesces keyed payloads into microtasks.
  */
-
-// ------------------------------------------------------------
-// src/core/store.ts
-// ------------------------------------------------------------
-import { createStore } from 'zustand/vanilla';
-import { subscribeWithSelector } from 'zustand/middleware';
-import type { FormStoreApi, FormStoreState, FormState } from './types';
+import type { FormStoreApi, FormStoreState } from './types';
+import { createSweetStore } from './sweet-store';
 
 /** Public shape of the batcher returned by {@link createBatcher}. */
 export type Batcher<TKey extends string = string, TPayload = unknown> = ReturnType<typeof createBatcher<TKey, TPayload>>;
@@ -95,7 +93,7 @@ export function createBatcher<TKey extends string = string, TPayload = unknown>(
 }
 
 /**
- * Creates a vanilla Zustand store for one form instance.
+ * Creates a sweet-store powered store for one form instance.
  *
  * No React dependency. DevTools can be enabled in development.
  * The store exposes a small API compatible with the rest of the library.
@@ -114,29 +112,13 @@ export function createFormStore<T>(name: string, initial: T, devtools: boolean):
         resolverEpoch: 0,
     };
 
-    const withMw = (creator: any) => {
-        if (process.env.NODE_ENV !== 'production' && devtools) {
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            const { devtools: applyDevtools } = require('zustand/middleware'); // Use require here to avoid ESM/CJS top-level interop issues.
-            return applyDevtools(subscribeWithSelector(creator), { name });
-        }
-        return subscribeWithSelector(creator);
-    };
-    // Create a vanilla Zustand store. No React dependency here.
-    const storeImpl = createStore<FormStoreState<T>>(withMw(() => base));
+    const sweet = createSweetStore<FormStoreState<T>>(base, { name, devtools });
 
     return {
-        getState: storeImpl.getState,
-        setState: (updater, _replace, action) => {
-            const next = updater(storeImpl.getState());
-            const rawSet: unknown = (storeImpl as unknown as { setState: (...args: unknown[]) => void }).setState;
-            // Call signatures vary depending on middleware; detect arity.
-            if (typeof rawSet === 'function' && (rawSet as Function).length >= 3 && action !== undefined) {
-                (rawSet as (partial: unknown, replace?: boolean, action?: unknown) => void)(next as unknown, true, action);
-            } else if (typeof rawSet === 'function') {
-                (rawSet as (partial: unknown, replace?: boolean) => void)(next as unknown, true);
-            }
+        getState: sweet.getState,
+        setState: (updater, replace, action) => {
+            sweet.setState((current) => updater(current), replace, action);
         },
-        subscribe: (fn) => storeImpl.subscribe(fn),
+        subscribe: (fn) => sweet.subscribe(fn),
     };
 }

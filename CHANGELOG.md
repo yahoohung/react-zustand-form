@@ -1,5 +1,5 @@
 ## 1.1
-- **Hooks subpath export**: Added new `hooks/` folder with `useForm` and `useIndexSnapshot` re‑exports. Consumers can now import either from the root (`import { useForm } from 'react-zustand-form'`) or the subpath (`import { useForm } from 'react-zustand-form/hooks'`).
+- **Hooks subpath export**: Added new `hooks/` folder with `useForm` and `useIndexSnapshot` re‑exports. Consumers can now import either from the root (`import { useForm } from 'rezend-form'`) or the subpath (`import { useForm } from 'rezend-form/hooks'`).
 - **Kernel safety**: 
   - `setStateSafe` now forwards an optional `actionName` to devtools for better traceability.
   - Development‑only guard detects and warns on direct `useStore.setState` calls that bypass the ActionGate.
