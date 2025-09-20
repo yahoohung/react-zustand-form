@@ -20,7 +20,8 @@ export function createIndexStoreWorker(opts: IndexStoreOptions = {}): IndexStore
   }
 
   // Avoid referencing __dirname in ESM/browser. resolveModuleUrl will use import.meta.url.
-  const fallbackDir = typeof __dirname !== 'undefined' ? __dirname : '';
+  const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'undefined';
+  const fallbackDir = !isBrowser && typeof __dirname !== 'undefined' ? __dirname : '';
   const base = resolveModuleUrl(fallbackDir, (globalThis as any).__WORKER_BASE_URL__);
   const worker = new Worker(new URL('./worker/index-worker.ts', base), { type: 'module' });  // Inject the real impl factory into worker global for initialisation handshake.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

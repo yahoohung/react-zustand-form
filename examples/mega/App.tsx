@@ -18,6 +18,8 @@ import exPkg from '../package.json';
 import source from './App.tsx?raw';
 
 type Rows = Record<string, Record<string, number>>;
+type DirtyMap = Record<string, true>;
+type DirtyAction = { type: 'mark'; key: string } | { type: 'reset' };
 
 function genRows(r: number, c: number): Rows {
   const out: Rows = {};
@@ -35,12 +37,12 @@ const Cell: React.FC<{
   pathKey: string; // "row.col"
   rowKey: string;
   colKey: string;
-  dirtyKeys: Set<string>;
+  isDirty: boolean;
   onDirty: (k: string) => void;
   onBlurSend: (path: string, value: number) => void;
   validateDelay: number;
   resetNonce: number;
-}> = React.memo(({ kernel, pathKey, rowKey, colKey, dirtyKeys, onDirty, onBlurSend, validateDelay, resetNonce }) => {
+}> = React.memo(({ kernel, pathKey, rowKey, colKey, isDirty, onDirty, onBlurSend, validateDelay, resetNonce }) => {
   const value = kernel.useStore(makeFieldSelector(rowKey, colKey)) as number | undefined;
   const [pulse, setPulse] = React.useState(0);
   const prevRef = React.useRef<number | undefined>(value);
@@ -68,7 +70,6 @@ const Cell: React.FC<{
     }, validateDelay);
   };
 
-  const isDirty = dirtyKeys.has(pathKey);
   const className = [isDirty ? 'cell-dirty' : '', pulse % 2 === 1 ? 'cell-changed' : ''].join(' ').trim();
 
   return (
@@ -106,29 +107,65 @@ export default function MegaGrid() {
   const colKeys = React.useMemo(() => (rows[rowKeys[0]] ? Object.keys(rows[rowKeys[0]]) : []), [rows, rowKeys]);
 
   // dirty & changed tracking
-  const [dirtyKeys, setDirtyKeys] = React.useState<Set<string>>(() => new Set());
-  const markDirty = React.useCallback((k: string) => setDirtyKeys((s) => { const n = new Set(s); n.add(k); return n; }), []);
+  const dirtyRef = React.useRef<DirtyMap>({});
+  const [dirtyMap, dispatchDirty] = React.useReducer(
+    (state: DirtyMap, action: DirtyAction): DirtyMap => {
+      if (action.type === 'mark') {
+        if (state[action.key]) return state;
+        return { ...state, [action.key]: true };
+      }
+      if (action.type === 'reset') return {};
+      return state;
+    },
+    {} as DirtyMap
+  );
+  React.useEffect(() => {
+    dirtyRef.current = dirtyMap;
+  }, [dirtyMap]);
+  const markDirty = React.useCallback((k: string) => dispatchDirty({ type: 'mark', key: k }), []);
   const [resetNonce, setResetNonce] = React.useState(0);
-  const resetDirty = () => { setDirtyKeys(new Set()); setResetNonce((x) => x + 1); };
+  const pendingRef = React.useRef<Record<string, number>>({});
+  const resetDirty = React.useCallback(() => {
+    dispatchDirty({ type: 'reset' });
+    setResetNonce((x) => x + 1);
+    const pending = pendingRef.current;
+    const keys = Object.keys(pending);
+    if (keys.length) {
+      const payload: Record<string, number> = {};
+      for (const key of keys) payload[key] = pending[key];
+      kernel.gate.applyPatches(payload);
+      pendingRef.current = {};
+    }
+  }, [kernel.gate]);
 
   // auto server updates (skip dirty)
   React.useEffect(() => {
     const id = setInterval(() => {
-      const rks = rowKeys; const cks = colKeys;
-      if (!rks.length || !cks.length) return;
+      const stateRows = kernel.useStore.getState().rows as Rows;
+      const rks = Object.keys(stateRows);
+      if (!rks.length) return;
+      const firstRow = stateRows[rks[0]] ?? {};
+      const cks = Object.keys(firstRow);
+      if (!cks.length) return;
       const patches: Record<string, number> = {};
       const count = Math.min(autoCount, rks.length * cks.length);
       for (let i = 0; i < count; i++) {
         const rk = rks[(Math.random() * rks.length) | 0];
         const ck = cks[(Math.random() * cks.length) | 0];
         const k = `${rk}.${ck}`;
-        if (dirtyKeys.has(k)) continue; // keep-dirty
-        patches[`rows.${rk}.${ck}`] = Math.floor(Math.random() * 1000);
+        const path = `rows.${rk}.${ck}`;
+        const next = Math.floor(Math.random() * 1000);
+        if (dirtyRef.current[k]) {
+          pendingRef.current[path] = next;
+          continue; // keep-dirty
+        }
+        patches[path] = next;
+        if (pendingRef.current[path] !== undefined) delete pendingRef.current[path];
       }
       if (Object.keys(patches).length) kernel.gate.applyPatches(patches);
     }, 1000);
     return () => clearInterval(id);
-  }, [kernel, rowKeys, colKeys, autoCount, dirtyKeys]);
+  }, [kernel, autoCount]);
 
   // simulate backend send on blur
   const [logs, setLogs] = React.useState<string[]>([]);
@@ -144,7 +181,8 @@ export default function MegaGrid() {
       for (const ck of Object.keys(rv)) patches[`rows.${rk}.${ck}`] = (rv as any)[ck];
     }
     kernel.gate.applyPatches(patches);
-    setDirtyKeys(new Set());
+    pendingRef.current = {};
+    resetDirty();
   };
 
   return (
@@ -196,7 +234,7 @@ export default function MegaGrid() {
                       pathKey={`${rk}.${ck}`}
                       rowKey={rk}
                       colKey={ck}
-                      dirtyKeys={dirtyKeys}
+                      isDirty={Boolean(dirtyMap[`${rk}.${ck}`])}
                       onDirty={markDirty}
                       onBlurSend={sendToBackend}
                       validateDelay={validateDelay}

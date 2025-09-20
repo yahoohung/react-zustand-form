@@ -84,13 +84,15 @@ export default function FormikMega() {
   const rows = Object.keys(formik.values);
   const cols = Object.keys(formik.values[rows[0]] || {});
 
-  const setValue = (path: string, value: number) => {
+  const setValue = React.useCallback((path: string, value: number) => {
     const [rk, ck] = path.split('.');
     formik.setFieldValue(`${rk}.${ck}`, value, false);
-  };
+  }, [formik]);
 
   // dirty & updated
   const [dirtyKeys, setDirtyKeys] = React.useState<Set<string>>(() => new Set());
+  const dirtyRef = React.useRef<Set<string>>(new Set());
+  React.useEffect(() => { dirtyRef.current = dirtyKeys; }, [dirtyKeys]);
   const [updatedKeys, setUpdatedKeys] = React.useState<Set<string>>(() => new Set());
   const timers = React.useRef<Map<string, any>>(new Map());
   const markUpdated = React.useCallback((k: string) => {
@@ -100,7 +102,20 @@ export default function FormikMega() {
   }, []);
   const onDirty = (k: string) => setDirtyKeys((s) => { const n = new Set(s); n.add(k); return n; });
   const [resetNonce, setResetNonce] = React.useState(0);
-  const resetDirty = () => { setDirtyKeys(new Set()); setResetNonce((x) => x + 1); };
+  const pendingRef = React.useRef<Record<string, number>>({});
+  const resetDirty = React.useCallback(() => {
+    setDirtyKeys(new Set());
+    setResetNonce((x) => x + 1);
+    const pending = pendingRef.current;
+    const entries = Object.entries(pending);
+    if (entries.length) {
+      for (const [p, value] of entries) {
+        setValue(p, value);
+        markUpdated(p);
+      }
+      pendingRef.current = {};
+    }
+  }, [markUpdated, setValue]);
 
   // auto server updates (skip dirty)
   React.useEffect(() => {
@@ -111,13 +126,18 @@ export default function FormikMega() {
         const rk = rows[(Math.random() * rows.length) | 0];
         const ck = cols[(Math.random() * cols.length) | 0];
         const p = `${rk}.${ck}`;
-        if (dirtyKeys.has(p)) continue;
         const next = Math.floor(Math.random() * 1000);
-        setValue(p, next); markUpdated(p);
+        if (dirtyRef.current.has(p)) {
+          pendingRef.current[p] = next;
+          continue;
+        }
+        if (pendingRef.current[p] !== undefined) delete pendingRef.current[p];
+        setValue(p, next);
+        markUpdated(p);
       }
     }, 1000);
     return () => clearInterval(id);
-  }, [rows, cols, autoCount, dirtyKeys, markUpdated]);
+  }, [rows, cols, autoCount, markUpdated]);
 
   // simulate backend send on blur
   const [logs, setLogs] = React.useState<string[]>([]);
@@ -126,7 +146,9 @@ export default function FormikMega() {
   const regenerate = () => {
     const next = genGrid(rowsN, colsN);
     formik.resetForm({ values: next });
-    setDirtyKeys(new Set()); setUpdatedKeys(new Set()); setResetNonce((x) => x + 1);
+    setDirtyKeys(new Set()); dirtyRef.current = new Set();
+    setUpdatedKeys(new Set()); setResetNonce((x) => x + 1);
+    pendingRef.current = {};
   };
 
   return (

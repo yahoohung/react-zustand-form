@@ -21,6 +21,8 @@ Switch demos by changing the hash part of the URL (`/#demo-name`). The navigatio
 - `/#kernel` – table-style form state with indexing and diffs.
 - `/#kernel-worker` – same kernel but with indexing offloaded to a worker.
 - `/#backend-sync` – pushing diffs to a fake backend and applying server patches.
+- `/#sudoku` – 9×9 Sudoku showcasing field/row/column subscriptions.
+- `/#2048` – the 2048 puzzle with kernel-powered moves, row summaries, and column watchers.
 - `/#validation` – `resolver` wired to either Zod or AJV.
 - `/#perf` – 5k-field grid showcasing selector performance.
 - `/#mega`, `/#rhf-mega`, `/#formik-mega` – side-by-side 10k-field stress tests.
@@ -34,6 +36,8 @@ Switch demos by changing the hash part of the URL (`/#demo-name`). The navigatio
 - **Kernel** – Work with row/column data, call `gate.updateField/addRow/removeRow/renameRow`, and read live indexes with `indexStore.getColumn()`.
 - **Kernel + worker** – Enable `offloadToWorker: true` to keep the main thread free on large datasets and read indexes via `snapshot()`.
 - **Backend sync** – Use `createBackendSync` to debounce pushes, retry failures, and merge server patches without clobbering user edits.
+- **Sudoku** – Drive a 9×9 puzzle with `createFormKernel`, field-level cells, row-level selectors, and column watchers via memoised selectors.
+- **2048** – Slide tiles with `createFormKernel`, demonstrating row-level summaries and column watchers derived from memoised selectors.
 - **Validation** – Provide your own schema resolver; the demo flips between Zod and AJV to show the contract.
 - **Perf / Mega variants** – Observe how selectors keep 5k–10k fields responsive and compare against React Hook Form and Formik.
 
