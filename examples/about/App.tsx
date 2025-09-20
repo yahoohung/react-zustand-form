@@ -20,7 +20,7 @@ export default function About() {
           <li>Form state tools for React 18/19 with fine‑grained updates.</li>
           <li>Two layers: application hooks (<code>useForm</code>) and a data kernel (<code>createFormKernel</code>).</li>
           <li>Kernel provides atomic field/row operations, column index, diffs and versioning.</li>
-          <li>Examples demonstrate uncontrolled/controlled inputs, backend sync, worker offload, and large grids.</li>
+          <li>Examples demonstrate uncontrolled/controlled inputs, backend + DOM sync helpers, worker offload, and large grids (including react-hook-form and react-sweet-state baselines).</li>
         </ul>
         <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <a href="#perf-battle">Performance comparison</a>
@@ -28,6 +28,8 @@ export default function About() {
           <a href="#mega">Kernel 10k grid</a>
           <span>·</span>
           <a href="#rhf-mega">RHF 10k grid</a>
+          <span>·</span>
+          <a href="#sweet-state-mega">Sweet-state 10k grid</a>
           <span>·</span>
           <a href="#formik-mega">Formik 10k grid</a>
           <span>·</span>

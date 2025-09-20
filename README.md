@@ -22,7 +22,7 @@ So we built **RZF** to keep React rendering simple and let the store do the work
 ## Main features
 
 * **User-first uncontrolled**: register fields as uncontrolled; we only track `dirty` and `touched`, and read values from the DOM on submit.
-* **Server sync plugin**: merges updates and **only changes fields that are not dirty** (you can set the policy).
+* **Sync helpers**: DOM reset (`createDomResetSync`) and headless backend (`createBackendSync`) merges that respect keep-dirty policies.
 * **Concurrent-safe**: built on Zustand v5 (`useSyncExternalStore` inside); can use `startTransition` if you want.
 * **Fine subscriptions**: `subscribeWithSelector` only updates what you need.
 * **Safe path tools**: strong `parsePath`, `getAtPath`, `setAtPath` with protection against prototype pollution.
@@ -51,6 +51,7 @@ npm i react-zustand-form zustand
   - `/#backend-sync` (debounce/coalesce/retry + keep-dirty server patches)
   - `/#validation` (resolver with Zod or AJV)
   - `/#perf` (large grid, e.g. 5k fields, FPS meter)
+  - `/#mega`, `/#rhf-mega`, `/#sweet-state-mega`, `/#formik-mega` (10k-field stress tests across libraries)
 
 Example sources live under `examples/`.
 
@@ -63,6 +64,7 @@ What each demo shows
 - `backend-sync`: batching/coalescing/retry of diffs; apply server patches with a keep-dirty policy.
 - `validation`: shows `resolver` wired to Zod or AJV.
 - `perf`: big grid (e.g. 100×50 = 5k fields) where only edited cells re-render; includes a simple FPS meter.
+- `mega` / library comparisons: 10k-grid stress tests using react-zustand-form (kernel), react-hook-form, react-sweet-state, and Formik.
 
 ---
 
@@ -127,18 +129,18 @@ const { Provider, register } = useForm<Values>({
 });
 ```
 
-### 4) Backend sync (client-only plugin)
+### 4) DOM reset sync (client-only plugin)
 
 ```tsx
-import { createBackendSync } from 'react-zustand-form/plugins/backend-sync';
+import { createDomResetSync } from 'react-zustand-form/plugins';
 
 const { Provider, register, store } = useForm<Values>({ defaultValues: { name: '' } });
 
-// Merges updates; only changes fields that are not dirty (configurable)
-const sync = createBackendSync(store, { coalesceMs: 16, policy: 'keepDirtyValues' });
+// Merges server patches; only changes fields that are not dirty (configurable)
+const resetSync = createDomResetSync(store, { coalesceMs: 16, policy: 'keepDirtyValues' });
 
 // In your socket handler:
-sync.pushServerPatch({ 'name': 'Alice' });
+resetSync.pushServerPatch({ name: 'Alice' });
 ```
 
 ---
@@ -278,7 +280,7 @@ import {
   useForm,
   getAtPath, // path tools
 } from 'react-zustand-form';
-import { createBackendSync } from 'react-zustand-form/plugins/backend-sync';
+import { createDomResetSync } from 'react-zustand-form/plugins';
 
 type Values = {
   name: string;
@@ -295,9 +297,9 @@ export function LiveProfile() {
     // resolver: async (v) => ({ errors: v.name ? {} : { name: 'Required' } }),
   });
 
-  // 1) Attach backend sync (client only): merges; only changes fields that are not dirty
-  const sync = React.useMemo(
-    () => createBackendSync(store, { coalesceMs: 150, policy: 'keepDirtyValues' }),
+  // 1) Attach DOM reset sync (client only): merges server patches without clobbering dirty fields
+  const resetSync = React.useMemo(
+    () => createDomResetSync(store, { coalesceMs: 150, policy: 'keepDirtyValues' }),
     [store]
   );
 
@@ -311,10 +313,10 @@ export function LiveProfile() {
       const patch: Record<string, string> = { price };
       if (nameMaybe) patch['name'] = nameMaybe;
 
-      sync.pushServerPatch(patch);
+      resetSync.pushServerPatch(patch);
     }, 1000);
     return () => clearInterval(id);
-  }, [sync]);
+  }, [resetSync]);
 
   // 3) Reset helpers: to 'defaults' OR to 'server' (latest server snapshot)
   const resetTo = React.useCallback((mode: 'defaults' | 'server') => {
@@ -381,7 +383,7 @@ export function LiveProfile() {
 **What this shows**
 
 * Inputs are **uncontrolled** (`register(path, { uncontrolled: true })`).
-* The backend sends updates often; the plugin merges them and **will not overwrite dirty fields**.
+* The server sends updates often; the reset sync merges them and **will not overwrite dirty fields**.
 * Two reset options:
   * **defaults**: set each input back to the original values.
   * **server**: set each input to the **latest server snapshot**.
@@ -432,23 +434,67 @@ setAtPath({}, 'foo[0].bar', 7);  // { foo: [{ bar: 7 }] } (immutable)
 
 ---
 
-### Backend sync plugin (exported)
+### DOM reset sync plugin (exported)
 
 ```ts
-import { createBackendSync, type ResetPolicy } from 'react-zustand-form/plugins/backend-sync';
+import { createDomResetSync, type ResetPolicy } from 'react-zustand-form/plugins';
 
-const sync = createBackendSync(store, {
+const resetSync = createDomResetSync(store, {
   coalesceMs: 16,
   policy: 'keepDirtyValues' satisfies ResetPolicy,
 });
 
-sync.pushServerPatch({ 'rows.3.a': 12, 'name': 'Jane' });
-sync.dispose();
+resetSync.pushServerPatch({ name: 'Jane', price: '12.00' });
+resetSync.dispose();
 ```
 
-* Merges updates and sends them after `coalesceMs` milliseconds.
-* Writes to the store for tracking and **can** change `input.value` for uncontrolled fields (depends on policy).
-* If you type in a field, it is marked dirty and will not be overwritten unless you use `serverWins`.
+- Coalesces server patches, writes them into the store’s `serverState`, and (optionally) updates DOM inputs.
+- `policy` decides conflict resolution: `'keepDirtyValues'`, `'serverWins'`, `'clientWins'`, or `'merge'`.
+- Ideal when you use `useForm` and want to replay socket/stream updates without clobbering in-progress edits.
+
+### Backend sync engine (exported)
+
+```ts
+import { createFormKernel } from 'react-zustand-form';
+import { createBackendSync } from 'react-zustand-form/plugins';
+
+const initialRows = {
+  u1: { name: 'Ada', email: 'ada@example.com', score: 42 },
+  u2: { name: 'Linus', email: 'linus@example.net', score: 11 },
+};
+
+const kernel = createFormKernel(initialRows, { index: { whitelistColumns: ['score'] } });
+
+const backendSync = createBackendSync(
+  {
+    diffBus: kernel.diffBus,
+    gate: kernel.gate,
+    getState: kernel.useStore.getState,
+    versionMap: kernel.versionMap,
+    indexStore: kernel.indexStore,
+  },
+  {
+    push: async (batch) => {
+      /* send diffs to your API */
+    },
+    debounceMs: 150,
+    coalesceSamePath: true,
+    keepDirtyValues: true,
+    retry: { retries: 2, backoffMs: (attempt) => attempt * 250 },
+  }
+);
+
+backendSync.start();
+backendSync.applyServerPatch({ patches: { 'rows.u1.email': 'ada@example.org' } });
+void backendSync.flush(); // optional: force an immediate push
+backendSync.stop();
+backendSync.dispose();
+```
+
+- Listens to the kernel diff bus, batches diffs, and sends them through your `push` function.
+- `keepDirtyValues` accepts `true` or `{ shouldKeep(path, local, server) }` for custom conflict logic.
+- Lifecycle hooks (`onPushStart`, `onPushSuccess`, `onPushError`) report push outcomes; `retry` adds backoff.
+- Call `start()` once, use `flush()` for immediate sends, and always `stop()`/`dispose()` during teardown.
 
 ---
 

@@ -12,6 +12,7 @@ export default function PerfBattle({ onSelect }: { onSelect?: (id: string) => vo
   const react = (exPkg as any)?.dependencies?.react ?? '?';
   const rhf = (exPkg as any)?.dependencies?.['react-hook-form'] ?? '?';
   const formik = (exPkg as any)?.dependencies?.formik ?? '?';
+  const sweet = (exPkg as any)?.dependencies?.['react-sweet-state'] ?? '?';
 
   const metrics: Array<{ id: string; label: string; tag: string; score: number; pitch: string; description: string }> = [
     {
@@ -29,6 +30,14 @@ export default function PerfBattle({ onSelect }: { onSelect?: (id: string) => vo
       score: 0.45,
       pitch: 'Noticeable stutter',
       description: 'The entire tree re-renders on bursts, so typing pauses while React catches up.',
+    },
+    {
+      id: 'sweet-state-mega',
+      label: 'react-sweet-state • 10k grid',
+      tag: 'store',
+      score: 0.55,
+      pitch: 'Selector-driven, but noisier',
+      description: 'Sweet State’s selectors keep updates scoped, yet the single store still does more work than the dedicated kernel.',
     },
     {
       id: 'formik-mega',
@@ -54,7 +63,7 @@ export default function PerfBattle({ onSelect }: { onSelect?: (id: string) => vo
       <section style={{ marginBottom: 12 }}>
         <h3 style={{ margin: '0 0 6px' }}>Performance comparison — identical logic</h3>
         <ul style={{ margin: 0, paddingLeft: 18 }}>
-          <li><b>Scope</b>: Three 10k-field demos with the same requirements, built once with the kernel, once with React Hook Form, and once with Formik.</li>
+          <li><b>Scope</b>: Four 10k-field demos with identical requirements—react-zustand-form (kernel), react-hook-form, react-sweet-state, and Formik.</li>
           <li><b>Rules</b>: dirty = red border, changes pulse yellow, validation accepts 0–9999, random server updates land every second, blur logs the value.</li>
           <li><b>How to use</b>: Jump to a tab, tweak grid size and update rate, and watch both the live FPS counter and the trailing chart.</li>
         </ul>
@@ -63,11 +72,13 @@ export default function PerfBattle({ onSelect }: { onSelect?: (id: string) => vo
       <div className="panel" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
         <button type="button" onClick={() => selectDemo('mega')}>react‑zustand‑form (kernel)</button>
         <button type="button" onClick={() => selectDemo('rhf-mega')}>react‑hook‑form</button>
+        <button type="button" onClick={() => selectDemo('sweet-state-mega')}>react‑sweet‑state</button>
         <button type="button" onClick={() => selectDemo('formik-mega')}>Formik</button>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 12, opacity: 0.85 }}>
           <small>rzf {rzf}</small>
           <small>react {react}</small>
           <small>rhf {rhf}</small>
+          <small>sweet {sweet}</small>
           <small>formik {formik}</small>
         </div>
       </div>

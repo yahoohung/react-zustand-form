@@ -20,12 +20,13 @@ Switch demos by changing the hash part of the URL (`/#demo-name`). The navigatio
 - `/#controlled` – store-backed field with instant validation.
 - `/#kernel` – table-style form state with indexing and diffs.
 - `/#kernel-worker` – same kernel but with indexing offloaded to a worker.
-- `/#backend-sync` – pushing diffs to a fake backend and applying server patches.
+- `/#backend-sync` – diff bus demo using `createBackendSync` to batch pushes and apply server patches.
 - `/#sudoku` – 9×9 Sudoku showcasing field/row/column subscriptions.
 - `/#2048` – the 2048 puzzle with kernel-powered moves, row summaries, and column watchers.
 - `/#validation` – `resolver` wired to either Zod or AJV.
 - `/#perf` – 5k-field grid showcasing selector performance.
 - `/#mega`, `/#rhf-mega`, `/#formik-mega` – side-by-side 10k-field stress tests.
+- `/#sweet-state-mega` – 10k-field stress test backed by react-sweet-state.
 - `/#perf-battle` – explainer page that links the three perf demos.
 - `/#about` – renders the project README.
 
@@ -40,6 +41,7 @@ Switch demos by changing the hash part of the URL (`/#demo-name`). The navigatio
 - **2048** – Slide tiles with `createFormKernel`, demonstrating row-level summaries and column watchers derived from memoised selectors.
 - **Validation** – Provide your own schema resolver; the demo flips between Zod and AJV to show the contract.
 - **Perf / Mega variants** – Observe how selectors keep 5k–10k fields responsive and compare against React Hook Form and Formik.
+- **Sweet-state mega** – Same 10k stress grid built with react-sweet-state for state management comparison.
 
 ## Import paths
 

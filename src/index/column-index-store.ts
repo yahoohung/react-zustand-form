@@ -93,8 +93,7 @@ export function createIndexStore(opts: IndexStoreOptions = {}): IndexStore {
     columns.set(col, entry);
     columnCount += 1;
     maybePrune();
-    entry = columns.get(col) ?? null;
-    return entry;
+    return columns.get(col) ?? null;
   };
 
   const getColumn = (col: string): ColumnIndex => {

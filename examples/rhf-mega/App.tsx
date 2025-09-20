@@ -24,6 +24,9 @@ function genGrid(r: number, c: number): Grid {
   return out;
 }
 
+const ROW_HEIGHT = 36;
+const OVERSCAN_ROWS = 6;
+
 const Cell: React.FC<{
   path: string;
   form: ReturnType<typeof useForm>;
@@ -82,6 +85,10 @@ export default function RhfMega() {
 
   const rows = Object.keys(defaults);
   const cols = Object.keys(defaults[rows[0]] || {});
+
+  const [viewportHeight, setViewportHeight] = React.useState(360);
+  const [scrollTop, setScrollTop] = React.useState(0);
+  const bodyRef = React.useRef<HTMLDivElement | null>(null);
 
   // dirty & updated
   const [dirtyKeys, setDirtyKeys] = React.useState<Set<string>>(() => new Set());
@@ -142,7 +149,49 @@ export default function RhfMega() {
     form.reset(next);
     setDirtyKeys(new Set()); setUpdatedKeys(new Set()); setResetNonce((x) => x + 1);
     pendingRef.current = {};
+    if (bodyRef.current) bodyRef.current.scrollTop = 0;
+    setScrollTop(0);
   };
+
+  React.useLayoutEffect(() => {
+    const el = bodyRef.current;
+    if (!el) return;
+
+    const handleScroll = () => setScrollTop(el.scrollTop);
+    const handleResize = () => setViewportHeight(el.clientHeight || 0);
+
+    handleScroll();
+    handleResize();
+
+    el.addEventListener('scroll', handleScroll);
+
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver === 'function') {
+      resizeObserver = new ResizeObserver(handleResize);
+      resizeObserver.observe(el);
+    } else {
+      window.addEventListener('resize', handleResize);
+    }
+
+    return () => {
+      el.removeEventListener('scroll', handleScroll);
+      if (resizeObserver) resizeObserver.disconnect();
+      else window.removeEventListener('resize', handleResize);
+    };
+  }, [rows.length]);
+
+  const totalHeight = rows.length * ROW_HEIGHT;
+  const estimatedVisible = viewportHeight > 0 ? Math.ceil(viewportHeight / ROW_HEIGHT) : rows.length;
+  const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN_ROWS);
+  const endIndex = Math.min(rows.length, startIndex + estimatedVisible + OVERSCAN_ROWS * 2);
+  const offsetY = startIndex * ROW_HEIGHT;
+  const visibleRows = rows.slice(startIndex, endIndex);
+
+  const gridTemplate = React.useMemo(() => {
+    if (!cols.length) return '80px';
+    const colsTemplate = ['80px', ...cols.map(() => 'minmax(90px, 1fr)')];
+    return colsTemplate.join(' ');
+  }, [cols]);
 
   return (
     <div>
@@ -172,41 +221,47 @@ export default function RhfMega() {
         </div>
       </div>
 
-      <div className="panel scroll" style={{ marginTop: 12 }}>
-        <form>
-          <table>
-            <thead>
-              <tr>
-                <th>row</th>
-                {cols.map((ck) => (
-                  <th key={ck}>{ck}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((rk) => (
-                <tr key={rk}>
-                  <td>{rk}</td>
-                  {cols.map((ck) => (
-                    <td key={ck}>
-                      <Cell
-                        path={`${rk}.${ck}`}
-                        form={form}
-                        isDirty={dirtyKeys.has(`${rk}.${ck}`)}
-                        isUpdated={updatedKeys.has(`${rk}.${ck}`)}
-                        onDirty={onDirty}
-                        onBlurSend={onBlurSend}
-                        markUpdated={markUpdated}
-                        validateDelay={validateDelay}
-                        resetNonce={resetNonce}
-                      />
-                    </td>
+      <div className="panel" style={{ marginTop: 12 }}>
+        <div className="perf-grid">
+          <div className="perf-grid-header" style={{ gridTemplateColumns: gridTemplate }}>
+            <div className="perf-grid-cell perf-row-label">row</div>
+            {cols.map((ck) => (
+              <div key={ck} className="perf-grid-cell">{ck}</div>
+            ))}
+          </div>
+          <div ref={bodyRef} className="perf-grid-body">
+            <div style={{ height: totalHeight, position: 'relative' }}>
+              <div style={{ position: 'absolute', inset: 0, transform: `translateY(${offsetY}px)` }}>
+                <form>
+                  {visibleRows.map((rk) => (
+                    <div
+                      key={rk}
+                      className="perf-grid-row"
+                      style={{ gridTemplateColumns: gridTemplate, height: ROW_HEIGHT }}
+                    >
+                      <div className="perf-grid-cell perf-row-label">{rk}</div>
+                      {cols.map((ck) => (
+                        <div key={ck} className="perf-grid-cell">
+                          <Cell
+                            path={`${rk}.${ck}`}
+                            form={form}
+                            isDirty={dirtyKeys.has(`${rk}.${ck}`)}
+                            isUpdated={updatedKeys.has(`${rk}.${ck}`)}
+                            onDirty={onDirty}
+                            onBlurSend={onBlurSend}
+                            markUpdated={markUpdated}
+                            validateDelay={validateDelay}
+                            resetNonce={resetNonce}
+                          />
+                        </div>
+                      ))}
+                    </div>
                   ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </form>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="panel" style={{ marginTop: 12 }}>

@@ -304,7 +304,7 @@ export function createActionGate<S extends { rows: RowsShape }>(deps: ActionGate
       const pair = __entriesRemove[i];
       const col = pair[0];
       const val = pair[1];
-      versionMap.bump(col, rowKey);
+      versionMap.bump(col, null);
       diffs.push({
         kind: 'remove',
         path: `rows.${rowKey}.${col}`,

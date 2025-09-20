@@ -241,6 +241,57 @@ th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align:
 thead th { background: #f1f5f9; /* slate-100 */ font-weight: 600; }
 table td input { width: 100%; min-width: 0; }
 
+.perf-grid {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.perf-grid-header {
+  display: grid;
+  align-items: center;
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.perf-grid-body {
+  position: relative;
+  max-height: 420px;
+  overflow: auto;
+}
+
+.perf-grid-row {
+  display: grid;
+  align-items: center;
+  font-size: 0.95rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  background: var(--card);
+}
+
+.perf-grid-cell {
+  padding: 6px 8px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.perf-row-label {
+  font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, SFMono, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  color: var(--muted);
+}
+
+.perf-grid-cell input {
+  width: 100%;
+  min-width: 0;
+}
+
 input, button {
   font: inherit;
 }

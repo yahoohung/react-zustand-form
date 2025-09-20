@@ -15,6 +15,7 @@ import Mega from '../mega/App';
 import RhfMega from '../rhf-mega/App';
 import FormikMega from '../formik-mega/App';
 import PerfBattle from '../perf-battle/App';
+import SweetStateMega from '../sweet-state-mega/App';
 
 const demos = [
   {
@@ -104,6 +105,14 @@ const demos = [
     component: RhfMega,
     tags: ['performance', 'comparison'],
     source: 'rhf-mega',
+  },
+  {
+    id: 'sweet-state-mega',
+    title: 'react-sweet-state 10k',
+    blurb: 'Grid powered by react-sweet-state with the same stress settings.',
+    component: SweetStateMega,
+    tags: ['performance', 'comparison'],
+    source: 'sweet-state-mega',
   },
   {
     id: 'formik-mega',

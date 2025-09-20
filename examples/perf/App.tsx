@@ -4,6 +4,9 @@ import { makeFieldSelector } from '../../src/core/path-selectors';
 
 type Rows = Record<string, Record<string, unknown>>;
 
+const INITIAL_ROWS = 50;
+const INITIAL_COLS = 50;
+
 function genRows(r: number, c: number): Rows {
   const out: Rows = {};
   for (let i = 0; i < r; i++) {
@@ -14,6 +17,25 @@ function genRows(r: number, c: number): Rows {
   }
   return out;
 }
+
+function makeRowKeys(count: number) {
+  return Array.from({ length: count }, (_, i) => `r${i + 1}`);
+}
+
+function makeColKeys(count: number) {
+  return Array.from({ length: count }, (_, j) => `c${j}`);
+}
+
+function createKernel(rows: number, cols: number): ReturnType<typeof createFormKernel> {
+  const whitelist = makeColKeys(cols);
+  return createFormKernel(genRows(rows, cols), {
+    index: { whitelistColumns: whitelist },
+    guardInDev: false,
+  });
+}
+
+const ROW_HEIGHT = 36;
+const OVERSCAN_ROWS = 6;
 
 const Cell = React.memo(function Cell({ kernel, rowKey, colKey }: { kernel: ReturnType<typeof createFormKernel>; rowKey: string; colKey: string }) {
   const value = kernel.useStore(makeFieldSelector(rowKey, colKey)) as any;
@@ -47,24 +69,65 @@ function FpsMeter() {
 }
 
 export default function PerfDemo() {
-  const [rowsN, setRowsN] = React.useState(50);
-  const [colsN, setColsN] = React.useState(50);
-  const kernelRef = React.useRef<ReturnType<typeof createFormKernel>>();
-  if (!kernelRef.current) kernelRef.current = createFormKernel(genRows(rowsN, colsN), { index: { whitelistColumns: Array.from({ length: colsN }, (_, j) => `c${j}`) }, guardInDev: false });
-  const kernel = kernelRef.current!;
+  const [rowsN, setRowsN] = React.useState(INITIAL_ROWS);
+  const [colsN, setColsN] = React.useState(INITIAL_COLS);
+  const [kernel, setKernel] = React.useState(() => createKernel(INITIAL_ROWS, INITIAL_COLS));
+  const [rowKeys, setRowKeys] = React.useState<string[]>(() => makeRowKeys(INITIAL_ROWS));
+  const [colKeys, setColKeys] = React.useState<string[]>(() => makeColKeys(INITIAL_COLS));
+  const [viewportHeight, setViewportHeight] = React.useState(360);
+  const [scrollTop, setScrollTop] = React.useState(0);
+  const bodyRef = React.useRef<HTMLDivElement | null>(null);
 
-  const rows = kernel.useStore((s) => s.rows);
-  const rowKeys = Object.keys(rows);
-  const colKeys = rows[rowKeys[0]] ? Object.keys(rows[rowKeys[0]]) : [];
+  const regen = React.useCallback((r: number, c: number) => {
+    const nextRows = Number.isFinite(r) ? Math.max(0, Math.floor(r)) : 0;
+    const nextCols = Number.isFinite(c) ? Math.max(0, Math.floor(c)) : 0;
+    setRowsN(nextRows);
+    setColsN(nextCols);
+    setRowKeys(makeRowKeys(nextRows));
+    setColKeys(makeColKeys(nextCols));
+    setKernel(() => createKernel(nextRows, nextCols));
+    if (bodyRef.current) {
+      bodyRef.current.scrollTop = 0;
+    }
+    setScrollTop(0);
+  }, []);
 
-  const regen = (r: number, c: number) => {
-    setRowsN(r); setColsN(c);
-    const grid = genRows(r, c);
-    kernel.indexStore.rebuildFromRows(grid);
-    kernel.gate.applyPatches(Object.fromEntries(Object.entries(grid).flatMap(([rk, rv]) => Object.keys(rv).map((ck) => [`rows.${rk}.${ck}`, (rv as any)[ck]]))));
-  };
+  React.useLayoutEffect(() => {
+    const el = bodyRef.current;
+    if (!el) return;
+
+    const handleScroll = () => {
+      setScrollTop(el.scrollTop);
+    };
+    handleScroll();
+
+    el.addEventListener('scroll', handleScroll);
+
+    const updateHeight = () => {
+      setViewportHeight(el.clientHeight || 0);
+    };
+    updateHeight();
+
+    let resizeObs: ResizeObserver | null = null;
+    if (typeof ResizeObserver === 'function') {
+      resizeObs = new ResizeObserver(updateHeight);
+      resizeObs.observe(el);
+    } else {
+      window.addEventListener('resize', updateHeight);
+    }
+
+    return () => {
+      el.removeEventListener('scroll', handleScroll);
+      if (resizeObs) {
+        resizeObs.disconnect();
+      } else {
+        window.removeEventListener('resize', updateHeight);
+      }
+    };
+  }, [rowKeys.length]);
 
   const burstRandom = (count: number) => {
+    if (!rowKeys.length || !colKeys.length) return;
     const patches: Record<string, unknown> = {};
     for (let k = 0; k < count; k++) {
       const rk = rowKeys[Math.floor(Math.random() * rowKeys.length)];
@@ -73,6 +136,19 @@ export default function PerfDemo() {
     }
     kernel.gate.applyPatches(patches);
   };
+
+  const totalHeight = rowKeys.length * ROW_HEIGHT;
+  const estimatedVisible = viewportHeight > 0 ? Math.ceil(viewportHeight / ROW_HEIGHT) : rowKeys.length;
+  const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN_ROWS);
+  const endIndex = Math.min(rowKeys.length, startIndex + estimatedVisible + OVERSCAN_ROWS * 2);
+  const offsetY = startIndex * ROW_HEIGHT;
+  const visibleRows = rowKeys.slice(startIndex, endIndex);
+
+  const gridTemplate = React.useMemo(() => {
+    if (!colKeys.length) return '80px';
+    const cols = ['80px', ...colKeys.map(() => 'minmax(90px, 1fr)')];
+    return cols.join(' ');
+  }, [colKeys]);
 
   return (
     <div>
@@ -87,8 +163,26 @@ export default function PerfDemo() {
 
       <div className="panel" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
         <div>Size:
-          <input type="number" value={rowsN} onChange={(e) => setRowsN(Number(e.currentTarget.value || 0))} style={{ width: 80, marginLeft: 6 }} /> rows ×
-          <input type="number" value={colsN} onChange={(e) => setColsN(Number(e.currentTarget.value || 0))} style={{ width: 80, marginLeft: 6 }} /> cols
+          <input
+            type="number"
+            value={rowsN}
+            onChange={(e) => {
+              const next = Number.parseInt(e.currentTarget.value, 10);
+              setRowsN(Number.isFinite(next) ? next : 0);
+            }}
+            style={{ width: 80, marginLeft: 6 }}
+          />{' '}
+          rows ×
+          <input
+            type="number"
+            value={colsN}
+            onChange={(e) => {
+              const next = Number.parseInt(e.currentTarget.value, 10);
+              setColsN(Number.isFinite(next) ? next : 0);
+            }}
+            style={{ width: 80, marginLeft: 6 }}
+          />{' '}
+          cols
         </div>
         <button onClick={() => regen(rowsN, colsN)}>Regenerate</button>
         <button onClick={() => regen(100, 50)}>Generate 5k (100×50)</button>
@@ -96,29 +190,35 @@ export default function PerfDemo() {
         <div style={{ marginLeft: 'auto' }}>FPS: <FpsMeter /></div>
       </div>
 
-      <div className="panel scroll" style={{ marginTop: 12 }}>
-        <table>
-          <thead>
-            <tr>
-              <th>row</th>
-              {colKeys.map((ck) => (
-                <th key={ck}>{ck}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rowKeys.map((rk) => (
-              <tr key={rk}>
-                <td>{rk}</td>
-                {colKeys.map((ck) => (
-                  <td key={ck}>
-                    <Cell kernel={kernel} rowKey={rk} colKey={ck} />
-                  </td>
-                ))}
-              </tr>
+      <div className="panel" style={{ marginTop: 12 }}>
+        <div className="perf-grid">
+          <div className="perf-grid-header" style={{ gridTemplateColumns: gridTemplate }}>
+            <div className="perf-grid-cell perf-row-label">row</div>
+            {colKeys.map((ck) => (
+              <div key={ck} className="perf-grid-cell">{ck}</div>
             ))}
-          </tbody>
-        </table>
+          </div>
+          <div ref={bodyRef} className="perf-grid-body">
+            <div style={{ height: totalHeight, position: 'relative' }}>
+              <div style={{ position: 'absolute', inset: 0, transform: `translateY(${offsetY}px)` }}>
+                {visibleRows.map((rk) => (
+                  <div
+                    key={rk}
+                    className="perf-grid-row"
+                    style={{ gridTemplateColumns: gridTemplate, height: ROW_HEIGHT }}
+                  >
+                    <div className="perf-grid-cell perf-row-label">{rk}</div>
+                    {colKeys.map((ck) => (
+                      <div key={ck} className="perf-grid-cell">
+                        <Cell kernel={kernel} rowKey={rk} colKey={ck} />
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       <small style={{ display: 'block', marginTop: 8, color: 'var(--muted)' }}>Note: Rendering 5000+ DOM inputs is heavy in any library; the key is that updates remain scoped so typing is smooth.</small>
     </div>
