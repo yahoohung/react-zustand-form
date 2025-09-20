@@ -31,6 +31,10 @@ export interface VersionMap {
    * counter increases. Otherwise the specific row counter also increases.
    */
   bump: (col: string, rowKey: string | null) => void; // null => whole column changed
+  /** Drop per-row counters for every column that tracks the provided row key. */
+  dropRow: (rowKey: string) => void;
+  /** Move per-row counters from `oldKey` to `newKey`, keeping the higher counter. */
+  renameRow: (oldKey: string, newKey: string) => void;
   /** Get the live ColumnVersion for a column (created on demand). */
   get: (col: string) => ColumnVersion;
   /** Create an immutable copy of the whole structure. */
@@ -67,6 +71,29 @@ export function createVersionMap(): VersionMap {
     return map[col];
   };
 
+  const dropRow = (rowKey: string) => {
+    // Empty string keys are valid, so guard only against nullish inputs.
+    if (rowKey == null) return;
+    for (const col of Object.keys(map)) {
+      const byRow = map[col].versionByRow;
+      if (rowKey in byRow) delete byRow[rowKey];
+    }
+  };
+
+  const renameRow = (oldKey: string, newKey: string) => {
+    if (oldKey == null || newKey == null || oldKey === newKey) return;
+    for (const col of Object.keys(map)) {
+      const byRow = map[col].versionByRow;
+      if (!(oldKey in byRow)) continue;
+      const incoming = byRow[oldKey];
+      const existing = byRow[newKey];
+      if (existing === undefined || incoming > existing) {
+        byRow[newKey] = incoming;
+      }
+      delete byRow[oldKey];
+    }
+  };
+
   const snapshot = () => {
     const out: Record<string, ColumnVersion> = {};
     // Clone each column version and its row map to avoid external mutation.
@@ -81,5 +108,5 @@ export function createVersionMap(): VersionMap {
     for (const k of Object.keys(map)) delete map[k];
   };
 
-  return { ensureColumn, bump, get, snapshot, reset };
+  return { ensureColumn, bump, dropRow, renameRow, get, snapshot, reset };
 }

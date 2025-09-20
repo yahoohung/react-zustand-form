@@ -35,6 +35,34 @@ describe('createVersionMap', () => {
         expect(snap.c1.versionByRow['']).toBe(1);
     });
 
+    it('dropRow clears per-row counters across all columns', () => {
+        const vm = createVersionMap();
+        vm.bump('c1', 'r1');
+        vm.bump('c2', 'r1');
+        vm.bump('c2', 'r2');
+        vm.dropRow('r1');
+        const snap = vm.snapshot();
+        expect(snap.c1.versionByRow.r1).toBeUndefined();
+        expect(snap.c2.versionByRow.r1).toBeUndefined();
+        // other rows remain intact
+        expect(snap.c2.versionByRow.r2).toBe(1);
+    });
+
+    it('renameRow moves counters and keeps the higher version', () => {
+        const vm = createVersionMap();
+        vm.bump('c1', 'old'); // versionByRow.old = 1
+        vm.bump('c2', 'old');
+        vm.bump('c2', 'new'); // existing entry for new key with value 1
+        // Manually inflate existing new key counter to simulate higher version
+        vm.bump('c2', 'new'); // now new = 2
+        vm.renameRow('old', 'new');
+        const snap = vm.snapshot();
+        expect(snap.c1.versionByRow.old).toBeUndefined();
+        expect(snap.c1.versionByRow.new).toBe(1);
+        // Column c2 keeps the higher of existing (2) and incoming (1)
+        expect(snap.c2.versionByRow.new).toBe(2);
+    });
+
     it('get creates column if missing and returns live reference', () => {
         const vm = createVersionMap();
         const live = vm.get('newCol');

@@ -1,18 +1,13 @@
 /**
  * Full-coverage tests for src/core/path-selectors.ts
  */
-import {
-    makeFieldSelector,
-    dropRowFromSelectorCache,
-    renameRowInSelectorCache,
-    clearSelectorCache,
-} from '../src/core/path-selectors';
+import { makeFieldSelector, selectorCache } from '../src/core/path-selectors';
 
 type State = { rows: Record<string, Record<string, unknown>> };
 
 describe('path-selectors', () => {
     beforeEach(() => {
-        clearSelectorCache();
+        selectorCache.clear();
     });
 
     it('makeFieldSelector caches and returns the same selector', () => {
@@ -30,10 +25,10 @@ describe('path-selectors', () => {
         expect(sel({ rows: {} })).toBeUndefined();
     });
 
-    it('dropRowFromSelectorCache removes only selectors with matching prefix', () => {
+    it('dropRowFromSelectorCache removes only selectors for the target row', () => {
         const s1 = makeFieldSelector<State>('r1', 'a');
         const s2 = makeFieldSelector<State>('r2', 'b');
-        dropRowFromSelectorCache('r1');
+        selectorCache.dropRow('r1');
         const s1b = makeFieldSelector<State>('r1', 'a');
         const s2b = makeFieldSelector<State>('r2', 'b');
         // r1 selector was dropped, new reference created
@@ -42,25 +37,27 @@ describe('path-selectors', () => {
         expect(s2b).toBe(s2);
     });
 
-    it('renameRowInSelectorCache moves selectors to new row key', () => {
+    it('renameRowInSelectorCache moves selectors and merges with existing row map', () => {
         const selOldA = makeFieldSelector<State>('old', 'a');
         const selOldB = makeFieldSelector<State>('old', 'b');
-        renameRowInSelectorCache('old', 'new');
+        const selNewExisting = makeFieldSelector<State>('new', 'x');
+        selectorCache.renameRow('old', 'new');
         const selNewA = makeFieldSelector<State>('new', 'a');
         const selNewB = makeFieldSelector<State>('new', 'b');
-        // renamed selectors are the same functions
         expect(selNewA).toBe(selOldA);
         expect(selNewB).toBe(selOldB);
-        // old keys should now be replaced with new keys
-        dropRowFromSelectorCache('old'); // should do nothing
-        const selNewA2 = makeFieldSelector<State>('new', 'a');
-        expect(selNewA2).toBe(selNewA);
+        // Existing selectors under the target row remain intact
+        const selNewExisting2 = makeFieldSelector<State>('new', 'x');
+        expect(selNewExisting2).toBe(selNewExisting);
+        // Old row should have been removed
+        const selOldA2 = makeFieldSelector<State>('old', 'a');
+        expect(selOldA2).not.toBe(selOldA);
     });
 
-    it('clearSelectorCache empties all selectors', () => {
+    it('selectorCache.clear empties all selectors', () => {
         const s1 = makeFieldSelector<State>('r1', 'a');
         const s2 = makeFieldSelector<State>('r2', 'b');
-        clearSelectorCache();
+        selectorCache.clear();
         const s1b = makeFieldSelector<State>('r1', 'a');
         const s2b = makeFieldSelector<State>('r2', 'b');
         // after clearing, new references are returned

@@ -34,6 +34,8 @@ function makeFakeVersionMap(initial: number, withRows = true): VersionMap {
             col === 'c1' ? { version, versionByRow } : undefined) as any,
         bump: () => { },
         ensureColumn: () => { },
+        dropRow: () => { },
+        renameRow: () => { },
         snapshot: () => ({}),
         reset: () => { },
     };

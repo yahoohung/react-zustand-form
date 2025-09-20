@@ -7,7 +7,7 @@
 import type { DiffBus, FieldDiff } from './diff-bus';
 import type { VersionMap } from './version-map';
 import type { IndexStore } from '../index/column-index-store';
-import { dropRowFromSelectorCache, renameRowInSelectorCache } from './path-selectors';
+import { selectorCache } from './path-selectors';
 
 /** A string path to a single cell. Example: "rows.user123.email" */
 export type FieldPath = string;
@@ -143,24 +143,33 @@ export function createActionGate<S extends { rows: RowsShape }>(deps: ActionGate
    * @param patches Map of FieldPath to next value.
    */
   const applyPatches = (patches: Record<FieldPath, unknown>) => {
-    // Build candidate diffs against a snapshot, then rebase once if state changed meanwhile.
     const buildDiffs = (rows: RowsShape) => {
       const diffs: FieldDiff[] = [];
-      let nextRows: RowsShape | null = null;
+      let drafts: RowsShape | null = null;
+      const rowDrafts = new Map<string, Record<string, unknown>>();
+
+      const ensureDraft = (rowKey: string) => {
+        let draft = rowDrafts.get(rowKey);
+        if (draft) return draft;
+        if (!drafts) drafts = { ...rows };
+        draft = { ...(drafts[rowKey] ?? rows[rowKey] ?? {}) };
+        drafts[rowKey] = draft;
+        rowDrafts.set(rowKey, draft);
+        return draft;
+      };
 
       for (const [path, value] of Object.entries(patches)) {
         const sc = splitPath(path);
         if (!sc) continue;
         const { rowKey, column } = sc;
 
-        const base = nextRows ?? rows;
-        const prevRow = base[rowKey] ?? {};
+        const currentBase = drafts ? drafts : rows;
+        const prevRow = currentBase[rowKey] ?? rows[rowKey] ?? {};
         const prevVal = (prevRow as any)[column];
         if (prevVal === value) continue;
 
-        if (!nextRows) nextRows = { ...rows };
-        const newRow = { ...prevRow, [column]: value };
-        nextRows[rowKey] = newRow;
+        const draft = ensureDraft(rowKey);
+        draft[column] = value;
 
         diffs.push({
           kind: prevVal === undefined ? 'insert' : 'update',
@@ -172,41 +181,33 @@ export function createActionGate<S extends { rows: RowsShape }>(deps: ActionGate
           source: 'server',
         });
       }
-      return { diffs, nextRows: nextRows ?? rows };
+
+      return { diffs, nextRows: drafts ?? rows };
     };
 
     const s0 = getState();
     let { diffs, nextRows } = buildDiffs(s0.rows);
-
-    // If nothing to do, exit early.
     if (diffs.length === 0) return;
 
-    // Light rebase: if rows changed between snapshot and now, recompute once on latest.
     const s1 = getState();
     if (s1.rows !== s0.rows) {
       const recomputed = buildDiffs(s1.rows);
-      // If recompute produced different structure, take it.
-      if (recomputed.diffs.length) {
-        diffs = recomputed.diffs;
-        nextRows = recomputed.nextRows;
-      } else {
-        // Nothing left to apply after rebase.
+      if (recomputed.diffs.length === 0) {
         return;
       }
+      diffs = recomputed.diffs;
+      nextRows = recomputed.nextRows;
     }
 
-    // Commit state in one go (keeps React calm); name action for DevTools.
     setState({ rows: nextRows } as Partial<S>, false, 'rows/applyPatches');
 
-    // Index loop keeps us away from iterator-based `for..of`, which some ESLint setups restrict.
     for (let i = 0; i < diffs.length; i++) {
       const d = diffs[i];
-      if (!isUpsertCellDiff(d)) continue; // only insert/update carry a next value
+      if (!isUpsertCellDiff(d)) continue;
       indexStore.setCell(d.column, d.rowKey, d.next);
       versionMap.bump(d.column, d.rowKey);
     }
 
-    // Always publish as an array for consistency.
     diffBus.publish(diffs);
   };
 
@@ -287,12 +288,14 @@ export function createActionGate<S extends { rows: RowsShape }>(deps: ActionGate
     const prev = s.rows[rowKey];
     if (!prev) return;
 
+    // Clean dependent data structures before mutating rows
+    versionMap.dropRow(rowKey);
+    selectorCache.dropRow(rowKey);
+    indexStore.removeRow(rowKey);
+
     const nextRows = { ...s.rows } as RowsShape;
     delete nextRows[rowKey];
     setState({ rows: nextRows } as Partial<S>, false, 'rows/removeRow');
-
-    // remove once across all columns
-    indexStore.removeRow(rowKey);
 
     const diffs: FieldDiff[] = [];
     // Index-based loop to satisfy ESLint rules that restrict `for..of`.
@@ -311,7 +314,6 @@ export function createActionGate<S extends { rows: RowsShape }>(deps: ActionGate
         source: 'local'
       });
     }
-    dropRowFromSelectorCache(rowKey);
     diffBus.publish(diffs);
   };
 
@@ -332,9 +334,6 @@ export function createActionGate<S extends { rows: RowsShape }>(deps: ActionGate
     nextRows[newKey] = { ...prev };
     setState({ rows: nextRows } as Partial<S>, false, 'rows/renameRow');
 
-    // rename once across all columns
-    indexStore.renameRow(oldKey, newKey);
-
     const diffs: FieldDiff[] = [];
     // Index-based loop to satisfy ESLint rules that restrict `for..of`.
     const __entriesRename = Object.entries(prev);
@@ -351,7 +350,9 @@ export function createActionGate<S extends { rows: RowsShape }>(deps: ActionGate
         source: 'local'
       });
     }
-    renameRowInSelectorCache(oldKey, newKey);
+    versionMap.renameRow(oldKey, newKey);
+    selectorCache.renameRow(oldKey, newKey);
+    indexStore.renameRow(oldKey, newKey);
     diffBus.publish(diffs);
   };
 
